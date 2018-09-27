@@ -1,0 +1,43 @@
+syntax = "proto3";
+package test;
+
+import "protoc-gen-redis/proto/redis.proto";
+
+message EnabledWithTTL {
+    option (redis.enabled) = true;
+    option (redis.ttl) = true;
+    int32 some_integer = 1;
+}
+
+message EnabledWithTTL2 {
+    option (redis.enabled) = true;
+    int32 some_integer = 1;
+}
+
+message EnabledWithoutTTL {
+    option (redis.enabled) = true;
+    option (redis.ttl) = false;
+    int32 some_integer = 1;
+}
+
+message Disabled {
+    option (redis.enabled) = false;
+    option (redis.ttl) = false;
+    int32 some_integer = 1;
+}
+
+message Disabled2 {
+    option (redis.enabled) = false;
+    option (redis.ttl) = true;
+    int32 some_integer = 1;
+}
+
+message Disabled3 {
+    option (redis.ttl) = true;
+    int32 some_integer = 1;
+}
+
+message Disabled4 {
+    int32 some_integer = 1;
+}
+
