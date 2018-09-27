@@ -28,7 +28,7 @@ use redis string save the message proto data.
 
 ## example
 
-See [test.proto](github.com/galaxyobe/protoc-gen-redis/tree/master/test/test.proto)
+See [test.proto](https://github.com/Galaxyobe/protoc-gen-redis/blob/master/test/test.proto)
 ```protobuffer
 syntax = "proto3";
 package test;
