@@ -2,10 +2,13 @@ syntax = "proto3";
 package test;
 
 import "protoc-gen-redis/proto/redis.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
-message EnabledWithTTL {
+message Demo {
     option (redis.enabled) = true;
     option (redis.ttl) = true;
+    // storage type: string | hash, default is string
+    option (redis.storage_type) = "hash";
     int32 some_integer = 1;
 }
 

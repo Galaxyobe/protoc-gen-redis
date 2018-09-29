@@ -1,7 +1,8 @@
 # protoc-gen-redis
 
 Generate redis load and store function for protobuffer message.
-use redis string save the message proto data.
+use redis string save the message proto data or hash
+based on github.com/gomodule/redigo/redis
 
 ## using the following extensions:
 
@@ -19,11 +20,17 @@ use redis string save the message proto data.
 
         default: true
 
+    - storage_type
+
+        store to redis type ,only support string and hash
+
+        default: string
+
 ## Installing and using
 
 > go get -u github.com/galaxyobe/protoc-gen-redis
 
-> protoc $GOPATH/src -I . --go_out=. --redis_out=. *.proto
+> protoc -I=$GOPATH/src -I=. --go_out=. --redis_out=. *.proto
 
 
 ## example
@@ -198,3 +205,5 @@ func (m *EnabledWithoutTTL) StoreToRedis(ctx context.Context, conn github_com_go
 }
 ```
 
+// demo
+> protoc -I=. -I=$GOPATH/src -I=proto -I=test --go_out=. --plugin=protoc-gen-redis=./protoc-gen-redis test/*.proto
