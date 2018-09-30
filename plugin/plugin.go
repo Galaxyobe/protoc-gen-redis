@@ -1,10 +1,10 @@
 package plugin
 
 import (
+	"github.com/galaxyobe/protoc-gen-redis/proto"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/vanity"
-	"protoc-gen-redis/proto"
 	"text/template"
 )
 

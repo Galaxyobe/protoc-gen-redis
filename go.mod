@@ -1,4 +1,4 @@
-module protoc-gen-redis
+module github.com/galaxyobe/protoc-gen-redis
 
 require (
 	github.com/gogo/protobuf v1.1.1

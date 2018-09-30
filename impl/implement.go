@@ -13,9 +13,9 @@ package impl
 import (
 	"context"
 	"errors"
+	"github.com/galaxyobe/protoc-gen-redis/test"
 	"github.com/golang/protobuf/proto"
 	"github.com/gomodule/redigo/redis"
-	"protoc-gen-redis/test"
 	"reflect"
 	"strings"
 )
