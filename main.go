@@ -11,7 +11,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
-	"protoc-gen-redis/plugin"
+	"github.com/galaxyobe/protoc-gen-redis/plugin"
 )
 
 func main() {

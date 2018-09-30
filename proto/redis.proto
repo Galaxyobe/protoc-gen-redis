@@ -15,4 +15,13 @@ extend google.protobuf.MessageOptions {
     bool ttl = 65001;
     // storage type: string | hash, default is string
     string storage_type = 65002;
+    // storage codec: proto | json, default is proto
+    string storage_codec = 65003;
+}
+
+extend google.protobuf.FieldOptions {
+    // storage field type: string | hash, default is string
+    string storage_field_type = 65100;
+    // storage field codec: proto | json, default is proto
+    string storage_field_codec = 65101;
 }

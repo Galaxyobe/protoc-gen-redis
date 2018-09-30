@@ -206,4 +206,4 @@ func (m *EnabledWithoutTTL) StoreToRedis(ctx context.Context, conn github_com_go
 ```
 
 // demo
-> protoc -I=. -I=$GOPATH/src -I=proto -I=test --go_out=. --plugin=protoc-gen-redis=./protoc-gen-redis test/*.proto
+> protoc -I=. -I=$GOPATH/src -I=proto -I=examples --go_out=. --plugin=protoc-gen-redis=./protoc-gen-redis examples/*.proto

@@ -1,0 +1,38 @@
+syntax = "proto3";
+package test;
+
+import "github.com/galaxyobe/protoc-gen-redis/proto/redis.proto";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+//import "google/protobuf/timestamp.proto";
+
+message HashStorageType {
+    // enabled generate, default is false
+    option (redis.enabled) = true;
+    // storage type: string | hash, default is string
+    option (redis.storage_type) = "hash";
+    string some_string = 1;
+    bool some_bool = 2;
+    int32 some_int32 = 3;
+    uint32 some_uint32 = 4;
+    int64 some_int64 = 5;
+    uint64 some_uint64 = 6;
+    float some_float = 7;
+}
+
+
+message HashStorageType2 {
+    // enabled generate, default is false
+    option (redis.enabled) = true;
+    // storage type: string | hash, default is string
+    option (redis.storage_type) = "hash";
+    string some_string = 1;
+    bool some_bool = 2;
+    int32 some_int32 = 3;
+    uint32 some_uint32 = 4;
+    int64 some_int64 = 5;
+    uint64 some_uint64 = 6;
+    float some_float = 7;
+    HashStorageType some_message = 8;
+//    google.protobuf.Timestamp timestamp = 9;
+}
+

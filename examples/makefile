@@ -31,3 +31,5 @@ Includes := $(subst :, ,$(GOPATH))
 regenerate:
 	protoc  $(Includes:%=-I%/src) -I .:../proto --go_out=. --redis_out=. *.proto
 
+clean:
+	rm -rf *.go

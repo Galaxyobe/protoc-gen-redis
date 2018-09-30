@@ -1,18 +1,18 @@
 syntax = "proto3";
 package test;
 
-import "protoc-gen-redis/proto/redis.proto";
+import "github.com/galaxyobe/protoc-gen-redis/proto/redis.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
-message Demo {
+message EnabledWithTTL {
+    // enabled generate, default is false
     option (redis.enabled) = true;
+    // support key expire unit: second, default is true
     option (redis.ttl) = true;
-    // storage type: string | hash, default is string
-    option (redis.storage_type) = "hash";
     int32 some_integer = 1;
 }
 
-message EnabledWithTTL2 {
+message EnabledWithTTL1 {
     option (redis.enabled) = true;
     int32 some_integer = 1;
 }
