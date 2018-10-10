@@ -19,10 +19,15 @@ const (
 )
 
 type generateField struct {
-	Name     string
-	Value    string
-	Type     string
-	TypeName string
+	Name             string
+	Value            string
+	Type             string
+	GoType           string
+	NewGoType        string
+	RedisType        string
+	RedisTypeReplace bool
+	Setter           bool
+	Getter           bool
 }
 
 type generateData struct {
@@ -223,7 +228,7 @@ func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key 
 			{{- if eq .Type "TYPE_MESSAGE" }}
 			case "{{.Name}}":
 				// unmarshal {{.Name}}
-				r.m.{{.Name}} = new({{.TypeName}})
+				r.m.{{.Name}} = new({{.NewGoType}})
 				if err := {{$.CodecPkg}}.Unmarshal(data[i+1], r.m.{{.Name}}); err != nil {
 					return err	
 				}
@@ -296,29 +301,36 @@ func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key
 // generate Redis handler by hash type
 func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileDescriptor, message *generator.Descriptor) {
 
+	log.Println("-------------------------------------")
 	log.Println(file)
+
+	//for _, dep := range file.Dependency {
+	//	gp := p.Generator.GoPackageName(generator.GoImportPath(dep))
+	//	log.Println(gp)
+	//}
 	// range fields
 	for _, field := range message.Field {
 		name := generator.CamelCase(*field.Name)
 		log.Println(field)
+		log.Println(field.Options)
+
 		generateField := &generateField{
-			Name:  name,
-			Value: "r.m." + name,
-			Type:  field.Type.String(),
+			Name:   name,
+			Value:  "r.m." + name,
+			Type:   field.Type.String(),
+			Setter: true,
+			Getter: true,
 		}
-		switch *field.Type {
-		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
-			typeName := *field.TypeName
-			// same package
-			selfPackage := "." + *file.Package + "."
-			if strings.HasPrefix(typeName, selfPackage) {
-				generateField.TypeName = strings.Split(typeName, selfPackage)[1]
-			} else {
-				// TODO: 其他proto文件的引用
-				generateField.TypeName = typeName[1:]
-			}
-		default:
+
+		generateField.GoType, _ = p.Generator.GoType(message, field)
+		generateField.NewGoType = strings.Replace(generateField.GoType, "*", "", -1)
+		generateField.RedisType = generator.CamelCase(generateField.GoType)
+		// redis go just have 64bit function
+		if strings.Contains(generateField.RedisType, "32") {
+			generateField.RedisType = strings.Replace(generateField.RedisType, "32", "64", -1)
+			generateField.RedisTypeReplace = true
 		}
+
 		log.Println(generateField)
 		data.Fields = append(data.Fields, generateField)
 	}
@@ -331,5 +343,163 @@ func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 	tmpl, _ = template.New("hash").Parse(storeToRedisHashFuncTemplate)
 	if err := tmpl.Execute(p.Buffer, data); err != nil {
 		log.Println("storeToRedisHashFuncTemplate", data)
+	}
+
+	p.generateRedisHashGetBasicFieldFunc(data)
+}
+
+// get basic type from redis by hash field
+const getBasicTypeFromRedisHashFuncTemplate = `
+// get {{.MessageName}} {{.Name}} field value with key 
+func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) ({{.Name}} {{.GoType}}, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get {{.Name}} field
+	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, "{{.Name}}")); err != nil {
+		return {{.Name}}, err
+	} else {
+		{{- if .RedisTypeReplace}}
+			r.m.{{.Name}} = {{.GoType}}(value)
+		{{else}}
+			r.m.{{.Name}} = value
+		{{- end -}}
+    }
+
+	return r.m.{{.Name}}, nil
+}
+`
+
+// set basic type from redis by hash field
+const setBasicTypeFromRedisHashFuncTemplate = `
+// set {{.MessageName}} {{.Name}} field with key and {{.Name}} 
+func (r *{{.MessageName}}RedisController) Set{{.Name}}(key string, {{.Name}} {{.GoType}}) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set {{.Name}} field
+	r.m.{{.Name}} = {{.Name}}
+	_, err = conn.Do("HSET", key, "{{.Name}}", {{.Name}})
+
+	return
+}
+`
+
+// get message type from redis by hash field
+const getMessageTypeFromRedisHashFuncTemplate = `
+// get {{.MessageName}} {{.Name}} field value with key 
+func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) ({{.Name}} {{.GoType}}, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get {{.Name}} field
+	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, "{{.Name}}")); err != nil {
+		return {{.Name}}, err
+	} else {
+		// unmarshal {{.Name}}
+		r.m.{{.Name}} = new({{.NewGoType}})
+		if err = {{.CodecPkg}}.Unmarshal(value, r.m.{{.Name}}); err != nil {
+			return {{.Name}}, err
+		}
+    }
+
+	return r.m.{{.Name}}, nil
+}
+`
+
+// set message type from redis by hash field
+const setMessageTypeFromRedisHashFuncTemplate = `
+// set {{.MessageName}} {{.Name}} field with key and {{.Name}} 
+func (r *{{.MessageName}}RedisController) Set{{.Name}}(key string, {{.Name}} {{.GoType}}) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// marshal {{.Name}}
+	if r.m.{{.Name}} != nil {
+		r.m.{{.Name}} = {{.Name}}
+		if data, err := {{.CodecPkg}}.Marshal(r.m.{{.Name}}); err != nil {
+			return err
+		} else {
+			// set {{.Name}} field
+			_, err = conn.Do("HSET", key, "{{.Name}}", data)
+			return err 
+		}
+	}
+
+	return nil
+}
+`
+
+// generate Redis basic type get handler by hash type
+func (p *plugin) generateRedisHashGetBasicFieldFunc(data *generateData) {
+
+	type FiledType struct {
+		*generateField
+		MessageName string
+		RedisPkg    string
+		CodecPkg    string
+	}
+
+	for _, field := range data.Fields {
+
+		if !field.Setter || !field.Getter {
+			continue
+		}
+
+		fieldData := FiledType{
+			MessageName: data.MessageName,
+			RedisPkg:    data.RedisPkg,
+			CodecPkg:    data.CodecPkg,
+		}
+		fieldData.generateField = field
+
+		getTemplateName := ""
+		setTemplateName := ""
+		tpy := descriptor.FieldDescriptorProto_Type_value[field.Type]
+		switch descriptor.FieldDescriptorProto_Type(tpy) {
+		case descriptor.FieldDescriptorProto_TYPE_DOUBLE,
+			descriptor.FieldDescriptorProto_TYPE_FLOAT,
+			descriptor.FieldDescriptorProto_TYPE_INT64,
+			descriptor.FieldDescriptorProto_TYPE_UINT64,
+			descriptor.FieldDescriptorProto_TYPE_INT32,
+			descriptor.FieldDescriptorProto_TYPE_UINT32,
+			descriptor.FieldDescriptorProto_TYPE_FIXED64,
+			descriptor.FieldDescriptorProto_TYPE_SFIXED64,
+			descriptor.FieldDescriptorProto_TYPE_FIXED32,
+			descriptor.FieldDescriptorProto_TYPE_SFIXED32,
+			descriptor.FieldDescriptorProto_TYPE_BOOL,
+			descriptor.FieldDescriptorProto_TYPE_STRING:
+			getTemplateName = getBasicTypeFromRedisHashFuncTemplate
+			setTemplateName = setBasicTypeFromRedisHashFuncTemplate
+		case descriptor.FieldDescriptorProto_TYPE_ENUM:
+			getTemplateName = getBasicTypeFromRedisHashFuncTemplate
+			fieldData.RedisType = "Int64"
+			fieldData.RedisTypeReplace = true
+			setTemplateName = setBasicTypeFromRedisHashFuncTemplate
+		case descriptor.FieldDescriptorProto_TYPE_MESSAGE:
+			getTemplateName = getMessageTypeFromRedisHashFuncTemplate
+			fieldData.RedisType = "Bytes"
+			setTemplateName = setMessageTypeFromRedisHashFuncTemplate
+		default:
+			return
+		}
+
+		if getTemplateName != "" {
+			tmpl, _ := template.New("hash-get").Parse(getTemplateName)
+			if err := tmpl.Execute(p.Buffer, fieldData); err != nil {
+				log.Println(getTemplateName, fieldData)
+			}
+		}
+
+		if setTemplateName != "" {
+			tmpl, _ := template.New("hash-set").Parse(setTemplateName)
+			if err := tmpl.Execute(p.Buffer, fieldData); err != nil {
+				log.Println(setTemplateName, fieldData)
+			}
+		}
 	}
 }

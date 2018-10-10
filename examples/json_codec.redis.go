@@ -177,3 +177,247 @@ func (r *HashJsonCodecRedisController) Store(ctx context.Context, key string, tt
 
 	return err
 }
+
+// get HashJsonCodec SomeString field value with key
+func (r *HashJsonCodecRedisController) GetSomeString(key string) (SomeString string, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get SomeString field
+	if value, err := github_com_gomodule_redigo_redis.String(conn.Do("HGET", key, "SomeString")); err != nil {
+		return SomeString, err
+	} else {
+		r.m.SomeString = value
+	}
+
+	return r.m.SomeString, nil
+}
+
+// set HashJsonCodec SomeString field with key and SomeString
+func (r *HashJsonCodecRedisController) SetSomeString(key string, SomeString string) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set SomeString field
+	r.m.SomeString = SomeString
+	_, err = conn.Do("HSET", key, "SomeString", SomeString)
+
+	return
+}
+
+// get HashJsonCodec SomeBool field value with key
+func (r *HashJsonCodecRedisController) GetSomeBool(key string) (SomeBool bool, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get SomeBool field
+	if value, err := github_com_gomodule_redigo_redis.Bool(conn.Do("HGET", key, "SomeBool")); err != nil {
+		return SomeBool, err
+	} else {
+		r.m.SomeBool = value
+	}
+
+	return r.m.SomeBool, nil
+}
+
+// set HashJsonCodec SomeBool field with key and SomeBool
+func (r *HashJsonCodecRedisController) SetSomeBool(key string, SomeBool bool) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set SomeBool field
+	r.m.SomeBool = SomeBool
+	_, err = conn.Do("HSET", key, "SomeBool", SomeBool)
+
+	return
+}
+
+// get HashJsonCodec SomeInt32 field value with key
+func (r *HashJsonCodecRedisController) GetSomeInt32(key string) (SomeInt32 int32, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get SomeInt32 field
+	if value, err := github_com_gomodule_redigo_redis.Int64(conn.Do("HGET", key, "SomeInt32")); err != nil {
+		return SomeInt32, err
+	} else {
+		r.m.SomeInt32 = int32(value)
+	}
+
+	return r.m.SomeInt32, nil
+}
+
+// set HashJsonCodec SomeInt32 field with key and SomeInt32
+func (r *HashJsonCodecRedisController) SetSomeInt32(key string, SomeInt32 int32) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set SomeInt32 field
+	r.m.SomeInt32 = SomeInt32
+	_, err = conn.Do("HSET", key, "SomeInt32", SomeInt32)
+
+	return
+}
+
+// get HashJsonCodec SomeUint32 field value with key
+func (r *HashJsonCodecRedisController) GetSomeUint32(key string) (SomeUint32 uint32, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get SomeUint32 field
+	if value, err := github_com_gomodule_redigo_redis.Uint64(conn.Do("HGET", key, "SomeUint32")); err != nil {
+		return SomeUint32, err
+	} else {
+		r.m.SomeUint32 = uint32(value)
+	}
+
+	return r.m.SomeUint32, nil
+}
+
+// set HashJsonCodec SomeUint32 field with key and SomeUint32
+func (r *HashJsonCodecRedisController) SetSomeUint32(key string, SomeUint32 uint32) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set SomeUint32 field
+	r.m.SomeUint32 = SomeUint32
+	_, err = conn.Do("HSET", key, "SomeUint32", SomeUint32)
+
+	return
+}
+
+// get HashJsonCodec SomeInt64 field value with key
+func (r *HashJsonCodecRedisController) GetSomeInt64(key string) (SomeInt64 int64, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get SomeInt64 field
+	if value, err := github_com_gomodule_redigo_redis.Int64(conn.Do("HGET", key, "SomeInt64")); err != nil {
+		return SomeInt64, err
+	} else {
+		r.m.SomeInt64 = value
+	}
+
+	return r.m.SomeInt64, nil
+}
+
+// set HashJsonCodec SomeInt64 field with key and SomeInt64
+func (r *HashJsonCodecRedisController) SetSomeInt64(key string, SomeInt64 int64) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set SomeInt64 field
+	r.m.SomeInt64 = SomeInt64
+	_, err = conn.Do("HSET", key, "SomeInt64", SomeInt64)
+
+	return
+}
+
+// get HashJsonCodec SomeUint64 field value with key
+func (r *HashJsonCodecRedisController) GetSomeUint64(key string) (SomeUint64 uint64, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get SomeUint64 field
+	if value, err := github_com_gomodule_redigo_redis.Uint64(conn.Do("HGET", key, "SomeUint64")); err != nil {
+		return SomeUint64, err
+	} else {
+		r.m.SomeUint64 = value
+	}
+
+	return r.m.SomeUint64, nil
+}
+
+// set HashJsonCodec SomeUint64 field with key and SomeUint64
+func (r *HashJsonCodecRedisController) SetSomeUint64(key string, SomeUint64 uint64) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set SomeUint64 field
+	r.m.SomeUint64 = SomeUint64
+	_, err = conn.Do("HSET", key, "SomeUint64", SomeUint64)
+
+	return
+}
+
+// get HashJsonCodec SomeFloat field value with key
+func (r *HashJsonCodecRedisController) GetSomeFloat(key string) (SomeFloat float32, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get SomeFloat field
+	if value, err := github_com_gomodule_redigo_redis.Float64(conn.Do("HGET", key, "SomeFloat")); err != nil {
+		return SomeFloat, err
+	} else {
+		r.m.SomeFloat = float32(value)
+	}
+
+	return r.m.SomeFloat, nil
+}
+
+// set HashJsonCodec SomeFloat field with key and SomeFloat
+func (r *HashJsonCodecRedisController) SetSomeFloat(key string, SomeFloat float32) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set SomeFloat field
+	r.m.SomeFloat = SomeFloat
+	_, err = conn.Do("HSET", key, "SomeFloat", SomeFloat)
+
+	return
+}
+
+// get HashJsonCodec HashJsonCodec field value with key
+func (r *HashJsonCodecRedisController) GetHashJsonCodec(key string) (HashJsonCodec *HashJsonCodec, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get HashJsonCodec field
+	if value, err := github_com_gomodule_redigo_redis.Bytes(conn.Do("HGET", key, "HashJsonCodec")); err != nil {
+		return HashJsonCodec, err
+	} else {
+		// unmarshal HashJsonCodec
+		r.m.HashJsonCodec = new(HashJsonCodec)
+		if err = github_com_json_iterator_go.Unmarshal(value, r.m.HashJsonCodec); err != nil {
+			return HashJsonCodec, err
+		}
+	}
+
+	return r.m.HashJsonCodec, nil
+}
+
+// set HashJsonCodec HashJsonCodec field with key and HashJsonCodec
+func (r *HashJsonCodecRedisController) SetHashJsonCodec(key string, HashJsonCodec *HashJsonCodec) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// marshal HashJsonCodec
+	if r.m.HashJsonCodec != nil {
+		r.m.HashJsonCodec = HashJsonCodec
+		if data, err := github_com_json_iterator_go.Marshal(r.m.HashJsonCodec); err != nil {
+			return err
+		} else {
+			// set HashJsonCodec field
+			_, err = conn.Do("HSET", key, "HashJsonCodec", data)
+			return err
+		}
+	}
+
+	return nil
+}

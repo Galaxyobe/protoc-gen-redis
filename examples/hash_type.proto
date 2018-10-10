@@ -3,7 +3,7 @@ package test;
 
 import "github.com/galaxyobe/protoc-gen-redis/proto/redis.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
-//import "google/protobuf/timestamp.proto";
+import "google/protobuf/timestamp.proto";
 
 message HashStorageType {
     // enabled generate, default is false
@@ -17,6 +17,11 @@ message HashStorageType {
     int64 some_int64 = 5;
     uint64 some_uint64 = 6;
     float some_float = 7;
+    enum Enum {
+        E1 = 0;
+        E2 = 1;
+    }
+    Enum some_enum = 8;
 }
 
 
@@ -33,6 +38,6 @@ message HashStorageType2 {
     uint64 some_uint64 = 6;
     float some_float = 7;
     HashStorageType some_message = 8;
-//    google.protobuf.Timestamp timestamp = 9;
+    google.protobuf.Timestamp timestamp = 9;
 }
 
