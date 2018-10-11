@@ -26,6 +26,51 @@ based on github.com/gomodule/redigo/redis
 
         default: string
 
+    - storage_codec
+
+        storage codec: proto | json
+
+        default: proto
+
+    - hash_getter
+
+        all hash field getter function
+
+        default: true
+
+    - hash_setter
+
+        all hash field setter function
+
+        default: true
+
+* message field options
+
+    - storage_field_type
+
+        store to redis type ,only support string and hash
+
+        default: string
+
+    - storage_field_codec
+
+        storage codec: proto | json
+
+        default: proto
+
+    - hash_field_getter
+
+        hash field getter function
+
+        default: true
+
+    - hash_field_setter
+
+        hash field setter function
+
+        default: true
+
+
 ## Installing and using
 
 > go get -u github.com/galaxyobe/protoc-gen-redis

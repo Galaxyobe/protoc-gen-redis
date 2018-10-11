@@ -300,39 +300,43 @@ func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 	// range fields
 	for _, field := range message.Field {
 		name := generator.CamelCase(*field.Name)
-
 		generateField := &generateField{
-			Name:   name,
-			Value:  "r.m." + name,
-			Type:   field.Type.String(),
-			Setter: true,
-			Getter: true,
+			Name:  name,
+			Value: "r.m." + name,
+			Type:  field.Type.String(),
 		}
+
+		// hash field getter option
+		generateField.Getter = proto.GetBoolExtension(field.Options, redis.E_HashFieldGetter, proto.GetBoolExtension(message.Options, redis.E_HashGetter, true))
+		// hash field setter option
+		generateField.Setter = proto.GetBoolExtension(field.Options, redis.E_HashFieldSetter, proto.GetBoolExtension(message.Options, redis.E_HashSetter, true))
+
 		if field.TypeName != nil {
+			// use external proto
 			p.Generator.RecordTypeUse(*field.TypeName)
 		}
 		generateField.GoType, _ = p.Generator.GoType(message, field)
 		generateField.NewGoType = strings.Replace(generateField.GoType, "*", "", -1)
 		generateField.RedisType = generator.CamelCase(generateField.GoType)
-		// redis go just have 64bit function
+		// redis go just have 64-bit function
 		if strings.Contains(generateField.RedisType, "32") {
 			generateField.RedisType = strings.Replace(generateField.RedisType, "32", "64", -1)
 			generateField.RedisTypeReplace = true
 		}
-
 		data.Fields = append(data.Fields, generateField)
 	}
 
+	// hash load function
 	tmpl, _ := template.New("hash").Parse(loadFromRedisHashFuncTemplate)
 	if err := tmpl.Execute(p.Buffer, data); err != nil {
 		log.Println("loadFromRedisHashFuncTemplate", data)
 	}
-
+	// hash store function
 	tmpl, _ = template.New("hash").Parse(storeToRedisHashFuncTemplate)
 	if err := tmpl.Execute(p.Buffer, data); err != nil {
 		log.Println("storeToRedisHashFuncTemplate", data)
 	}
-
+	// hash field getter and setter function
 	p.generateRedisHashFieldFunc(data)
 }
 
@@ -434,10 +438,6 @@ func (p *plugin) generateRedisHashFieldFunc(data *generateData) {
 
 	for _, field := range data.Fields {
 
-		if !field.Setter || !field.Getter {
-			continue
-		}
-
 		fieldData := FiledType{
 			MessageName: data.MessageName,
 			RedisPkg:    data.RedisPkg,
@@ -475,18 +475,22 @@ func (p *plugin) generateRedisHashFieldFunc(data *generateData) {
 		default:
 			return
 		}
-
-		if getTemplateName != "" {
-			tmpl, _ := template.New("hash-get").Parse(getTemplateName)
-			if err := tmpl.Execute(p.Buffer, fieldData); err != nil {
-				log.Println(getTemplateName, fieldData)
+		
+		if field.Getter {
+			if getTemplateName != "" {
+				tmpl, _ := template.New("hash-get").Parse(getTemplateName)
+				if err := tmpl.Execute(p.Buffer, fieldData); err != nil {
+					log.Println(getTemplateName, fieldData)
+				}
 			}
 		}
-
-		if setTemplateName != "" {
-			tmpl, _ := template.New("hash-set").Parse(setTemplateName)
-			if err := tmpl.Execute(p.Buffer, fieldData); err != nil {
-				log.Println(setTemplateName, fieldData)
+		
+		if field.Setter {
+			if setTemplateName != "" {
+				tmpl, _ := template.New("hash-set").Parse(setTemplateName)
+				if err := tmpl.Execute(p.Buffer, fieldData); err != nil {
+					log.Println(setTemplateName, fieldData)
+				}
 			}
 		}
 	}
