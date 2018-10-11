@@ -4,11 +4,11 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
-	"github.com/gogo/protobuf/vanity"
 	"github.com/galaxyobe/protoc-gen-redis/proto"
 	"text/template"
 	"log"
 	"strings"
+	"github.com/gogo/protobuf/vanity"
 )
 
 const (
@@ -45,8 +45,6 @@ type generateData struct {
 type plugin struct {
 	*generator.Generator
 	generator.PluginImports
-	fmtPkg        generator.Single
-	protoPkg      generator.Single
 	useGogoImport bool
 }
 
@@ -72,7 +70,6 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	}
 
 	p.PluginImports = generator.NewPluginImports(p.Generator)
-	p.fmtPkg = p.NewImport("fmt")
 
 	for _, msg := range file.Messages() {
 		if msg.DescriptorProto.GetOptions().GetMapEntry() {
@@ -300,19 +297,9 @@ func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key
 
 // generate Redis handler by hash type
 func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileDescriptor, message *generator.Descriptor) {
-
-	log.Println("-------------------------------------")
-	log.Println(file)
-
-	//for _, dep := range file.Dependency {
-	//	gp := p.Generator.GoPackageName(generator.GoImportPath(dep))
-	//	log.Println(gp)
-	//}
 	// range fields
 	for _, field := range message.Field {
 		name := generator.CamelCase(*field.Name)
-		log.Println(field)
-		log.Println(field.Options)
 
 		generateField := &generateField{
 			Name:   name,
@@ -321,7 +308,9 @@ func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 			Setter: true,
 			Getter: true,
 		}
-
+		if field.TypeName != nil {
+			p.Generator.RecordTypeUse(*field.TypeName)
+		}
 		generateField.GoType, _ = p.Generator.GoType(message, field)
 		generateField.NewGoType = strings.Replace(generateField.GoType, "*", "", -1)
 		generateField.RedisType = generator.CamelCase(generateField.GoType)
@@ -331,7 +320,6 @@ func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 			generateField.RedisTypeReplace = true
 		}
 
-		log.Println(generateField)
 		data.Fields = append(data.Fields, generateField)
 	}
 
@@ -345,7 +333,7 @@ func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 		log.Println("storeToRedisHashFuncTemplate", data)
 	}
 
-	p.generateRedisHashGetBasicFieldFunc(data)
+	p.generateRedisHashFieldFunc(data)
 }
 
 // get basic type from redis by hash field
@@ -435,7 +423,7 @@ func (r *{{.MessageName}}RedisController) Set{{.Name}}(key string, {{.Name}} {{.
 `
 
 // generate Redis basic type get handler by hash type
-func (p *plugin) generateRedisHashGetBasicFieldFunc(data *generateData) {
+func (p *plugin) generateRedisHashFieldFunc(data *generateData) {
 
 	type FiledType struct {
 		*generateField
