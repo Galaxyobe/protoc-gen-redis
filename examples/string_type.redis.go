@@ -32,7 +32,7 @@ type StringStorageTypeRedisController struct {
 
 // new StringStorageType redis controller with redis pool
 func NewStringStorageTypeRedisController(pool *github_com_gomodule_redigo_redis.Pool) *StringStorageTypeRedisController {
-	return &StringStorageTypeRedisController{pool: pool}
+	return &StringStorageTypeRedisController{pool: pool, m: new(StringStorageType)}
 }
 
 // get StringStorageType
@@ -40,8 +40,31 @@ func (r *StringStorageTypeRedisController) StringStorageType() *StringStorageTyp
 	return r.m
 }
 
+// set StringStorageType
+func (r *StringStorageTypeRedisController) SetStringStorageType(m *StringStorageType) {
+	r.m = m
+}
+
 // store StringStorageType to redis string with context and key
-func (r *StringStorageTypeRedisController) Store(ctx context.Context, key string, ttl uint64) error {
+func (r *StringStorageTypeRedisController) Store(ctx context.Context, key string) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// marshal StringStorageType to []byte
+	data, err := proto.Marshal(r.m)
+	if err != nil {
+		return err
+	}
+
+	// use redis string store StringStorageType data
+	_, err = conn.Do("SET", key, data)
+
+	return err
+}
+
+// store StringStorageType to redis string with context, key and ttl expire second
+func (r *StringStorageTypeRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -90,12 +113,17 @@ type StringStorageTyp2RedisController struct {
 
 // new StringStorageTyp2 redis controller with redis pool
 func NewStringStorageTyp2RedisController(pool *github_com_gomodule_redigo_redis.Pool) *StringStorageTyp2RedisController {
-	return &StringStorageTyp2RedisController{pool: pool}
+	return &StringStorageTyp2RedisController{pool: pool, m: new(StringStorageTyp2)}
 }
 
 // get StringStorageTyp2
 func (r *StringStorageTyp2RedisController) StringStorageTyp2() *StringStorageTyp2 {
 	return r.m
+}
+
+// set StringStorageTyp2
+func (r *StringStorageTyp2RedisController) SetStringStorageTyp2(m *StringStorageTyp2) {
+	r.m = m
 }
 
 // store StringStorageTyp2 to redis string with context and key
@@ -112,6 +140,24 @@ func (r *StringStorageTyp2RedisController) Store(ctx context.Context, key string
 
 	// use redis string store StringStorageTyp2 data
 	_, err = conn.Do("SET", key, data)
+
+	return err
+}
+
+// store StringStorageTyp2 to redis string with context, key and ttl expire second
+func (r *StringStorageTyp2RedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// marshal StringStorageTyp2 to []byte
+	data, err := proto.Marshal(r.m)
+	if err != nil {
+		return err
+	}
+
+	// use redis string store StringStorageTyp2 data with expire second
+	_, err = conn.Do("SETEX", key, ttl, data)
 
 	return err
 }

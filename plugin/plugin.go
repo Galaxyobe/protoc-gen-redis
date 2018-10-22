@@ -38,7 +38,6 @@ type generateData struct {
 	MapStructurePkg string
 	CodecPkg        string
 	StorageType     string
-	Expired         bool
 	Fields          []*generateField
 }
 
@@ -82,13 +81,11 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 func (p *plugin) generateRedisFunc(file *generator.FileDescriptor, message *generator.Descriptor) {
 	// enable redis
 	if proto.GetBoolExtension(message.Options, redis.E_Enabled, false) {
-		expired := proto.GetBoolExtension(message.Options, redis.E_Ttl, true)
 
 		// generateData
 		data := &generateData{
 			ContextPkg:  p.NewImport(contextPkg).Use(),
 			RedisPkg:    p.NewImport(redisPkg).Use(),
-			Expired:     expired,
 			MessageName: generator.CamelCaseSlice(message.TypeName()),
 		}
 
@@ -131,12 +128,17 @@ type {{.MessageName}}RedisController struct {
 
 // new {{.MessageName}} redis controller with redis pool
 func New{{.MessageName}}RedisController(pool *{{.RedisPkg}}.Pool) *{{.MessageName}}RedisController {
-	return &{{.MessageName}}RedisController{pool: pool}
+	return &{{.MessageName}}RedisController{pool: pool, m: new({{.MessageName}})}
 }
 
 // get {{.MessageName}}
 func (r *{{.MessageName}}RedisController) {{.MessageName}}() *{{.MessageName}} {
 	return r.m
+}
+
+// set {{.MessageName}}
+func (r *{{.MessageName}}RedisController) Set{{.MessageName}}(m *{{.MessageName}}) {
+	r.m = m
 }
 `
 
@@ -168,7 +170,7 @@ func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key 
 // store to redis by string type
 const storeToRedisStringFuncTemplate = `
 // store {{.MessageName}} to redis string with context and key
-func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key string{{ if .Expired }}, ttl uint64{{ end }}) error {
+func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -179,13 +181,26 @@ func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key
 		return err
 	}
 
-	{{ if .Expired }}
-	// use redis string store {{.MessageName}} data with expire second
-	_, err = conn.Do("SETEX", key, ttl, data)
-	{{- else }}
 	// use redis string store {{.MessageName}} data
 	_, err = conn.Do("SET", key, data)
-	{{- end }}
+
+	return err
+}
+
+// store {{.MessageName}} to redis string with context, key and ttl expire second
+func (r *{{.MessageName}}RedisController) StoreWithTTL(ctx {{.ContextPkg}}.Context, key string, ttl uint64) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// marshal {{.MessageName}} to []byte
+	data, err := {{.CodecPkg}}.Marshal(r.m)
+	if err != nil {
+		return err
+	}
+
+	// use redis string store {{.MessageName}} data with expire second
+	_, err = conn.Do("SETEX", key, ttl, data)
 
 	return err
 }
@@ -244,7 +259,7 @@ func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key 
 // store to redis by hash type
 const storeToRedisHashFuncTemplate = `
 // store {{.MessageName}} to redis hash with context and key
-func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key string{{ if .Expired }}, ttl uint64{{ end }}) error {
+func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -271,7 +286,40 @@ func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key
 		{{- end }}
 	{{- end}}
 
-	{{if .Expired }}
+	// use redis hash store {{.MessageName}} data
+	_, err := conn.Do("HMSET", args...)
+
+	return err
+}
+
+// store {{.MessageName}} to redis hash with context, key and ttl expire second
+func (r *{{.MessageName}}RedisController) StoreWithTTL(ctx {{.ContextPkg}}.Context, key string, ttl uint64) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// make args
+	args := make([]interface{}, 0)
+
+	// add redis key
+	args = append(args, key)
+
+	// add redis field and value
+	{{- range .Fields}}
+		{{- if eq .Type "TYPE_MESSAGE" }}
+			// marshal {{.Name}}
+			if r.m.{{.Name}} != nil {
+				{{.Name}}, {{.Name}}Error := {{$.CodecPkg}}.Marshal(r.m.{{.Name}})
+				if {{.Name}}Error != nil {
+					return {{.Name}}Error
+				}
+				args = append(args, "{{.Name}}", {{.Name}})
+			}
+		{{- else }}
+			args = append(args, "{{.Name}}", {{.Value}})
+		{{- end }}
+	{{- end}}
+
 	// use redis hash store {{.MessageName}} data with expire second
 	err := conn.Send("MULTI")
 	if err != nil{
@@ -286,10 +334,6 @@ func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key
 		return err
 	}
 	_, err = conn.Do("EXEC")
-	{{- else }}
-	// use redis hash store {{.MessageName}} data
-	_, err := conn.Do("HMSET", args...)
-	{{- end }}
 
 	return err
 }

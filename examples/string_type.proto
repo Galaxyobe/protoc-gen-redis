@@ -15,7 +15,5 @@ message StringStorageType {
 message StringStorageTyp2 {
     // enabled generate, default is false
     option (redis.enabled) = true;
-    // support key expire unit: second, default is true
-    option (redis.ttl) = false;
     int32 some_integer = 1;
 }

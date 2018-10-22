@@ -34,12 +34,17 @@ type HashStorageTypeRedisController struct {
 
 // new HashStorageType redis controller with redis pool
 func NewHashStorageTypeRedisController(pool *github_com_gomodule_redigo_redis.Pool) *HashStorageTypeRedisController {
-	return &HashStorageTypeRedisController{pool: pool}
+	return &HashStorageTypeRedisController{pool: pool, m: new(HashStorageType)}
 }
 
 // get HashStorageType
 func (r *HashStorageTypeRedisController) HashStorageType() *HashStorageType {
 	return r.m
+}
+
+// set HashStorageType
+func (r *HashStorageTypeRedisController) SetHashStorageType(m *HashStorageType) {
+	r.m = m
 }
 
 // load HashStorageType from redis hash with context and key
@@ -68,7 +73,35 @@ func (r *HashStorageTypeRedisController) Load(ctx context.Context, key string) e
 }
 
 // store HashStorageType to redis hash with context and key
-func (r *HashStorageTypeRedisController) Store(ctx context.Context, key string, ttl uint64) error {
+func (r *HashStorageTypeRedisController) Store(ctx context.Context, key string) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// make args
+	args := make([]interface{}, 0)
+
+	// add redis key
+	args = append(args, key)
+
+	// add redis field and value
+	args = append(args, "SomeString", r.m.SomeString)
+	args = append(args, "SomeBool", r.m.SomeBool)
+	args = append(args, "SomeInt32", r.m.SomeInt32)
+	args = append(args, "SomeUint32", r.m.SomeUint32)
+	args = append(args, "SomeInt64", r.m.SomeInt64)
+	args = append(args, "SomeUint64", r.m.SomeUint64)
+	args = append(args, "SomeFloat", r.m.SomeFloat)
+	args = append(args, "SomeEnum", r.m.SomeEnum)
+
+	// use redis hash store HashStorageType data
+	_, err := conn.Do("HMSET", args...)
+
+	return err
+}
+
+// store HashStorageType to redis hash with context, key and ttl expire second
+func (r *HashStorageTypeRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -355,12 +388,17 @@ type HashStorageType2RedisController struct {
 
 // new HashStorageType2 redis controller with redis pool
 func NewHashStorageType2RedisController(pool *github_com_gomodule_redigo_redis.Pool) *HashStorageType2RedisController {
-	return &HashStorageType2RedisController{pool: pool}
+	return &HashStorageType2RedisController{pool: pool, m: new(HashStorageType2)}
 }
 
 // get HashStorageType2
 func (r *HashStorageType2RedisController) HashStorageType2() *HashStorageType2 {
 	return r.m
+}
+
+// set HashStorageType2
+func (r *HashStorageType2RedisController) SetHashStorageType2(m *HashStorageType2) {
+	r.m = m
 }
 
 // load HashStorageType2 from redis hash with context and key
@@ -401,7 +439,50 @@ func (r *HashStorageType2RedisController) Load(ctx context.Context, key string) 
 }
 
 // store HashStorageType2 to redis hash with context and key
-func (r *HashStorageType2RedisController) Store(ctx context.Context, key string, ttl uint64) error {
+func (r *HashStorageType2RedisController) Store(ctx context.Context, key string) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// make args
+	args := make([]interface{}, 0)
+
+	// add redis key
+	args = append(args, key)
+
+	// add redis field and value
+	args = append(args, "SomeString", r.m.SomeString)
+	args = append(args, "SomeBool", r.m.SomeBool)
+	args = append(args, "SomeInt32", r.m.SomeInt32)
+	args = append(args, "SomeUint32", r.m.SomeUint32)
+	args = append(args, "SomeInt64", r.m.SomeInt64)
+	args = append(args, "SomeUint64", r.m.SomeUint64)
+	args = append(args, "SomeFloat", r.m.SomeFloat)
+	// marshal SomeMessage
+	if r.m.SomeMessage != nil {
+		SomeMessage, SomeMessageError := proto.Marshal(r.m.SomeMessage)
+		if SomeMessageError != nil {
+			return SomeMessageError
+		}
+		args = append(args, "SomeMessage", SomeMessage)
+	}
+	// marshal Timestamp
+	if r.m.Timestamp != nil {
+		Timestamp, TimestampError := proto.Marshal(r.m.Timestamp)
+		if TimestampError != nil {
+			return TimestampError
+		}
+		args = append(args, "Timestamp", Timestamp)
+	}
+
+	// use redis hash store HashStorageType2 data
+	_, err := conn.Do("HMSET", args...)
+
+	return err
+}
+
+// store HashStorageType2 to redis hash with context, key and ttl expire second
+func (r *HashStorageType2RedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()

@@ -34,7 +34,7 @@ type StringJsonCodecRedisController struct {
 
 // new StringJsonCodec redis controller with redis pool
 func NewStringJsonCodecRedisController(pool *github_com_gomodule_redigo_redis.Pool) *StringJsonCodecRedisController {
-	return &StringJsonCodecRedisController{pool: pool}
+	return &StringJsonCodecRedisController{pool: pool, m: new(StringJsonCodec)}
 }
 
 // get StringJsonCodec
@@ -42,8 +42,31 @@ func (r *StringJsonCodecRedisController) StringJsonCodec() *StringJsonCodec {
 	return r.m
 }
 
+// set StringJsonCodec
+func (r *StringJsonCodecRedisController) SetStringJsonCodec(m *StringJsonCodec) {
+	r.m = m
+}
+
 // store StringJsonCodec to redis string with context and key
-func (r *StringJsonCodecRedisController) Store(ctx context.Context, key string, ttl uint64) error {
+func (r *StringJsonCodecRedisController) Store(ctx context.Context, key string) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// marshal StringJsonCodec to []byte
+	data, err := github_com_json_iterator_go.Marshal(r.m)
+	if err != nil {
+		return err
+	}
+
+	// use redis string store StringJsonCodec data
+	_, err = conn.Do("SET", key, data)
+
+	return err
+}
+
+// store StringJsonCodec to redis string with context, key and ttl expire second
+func (r *StringJsonCodecRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -92,12 +115,17 @@ type HashJsonCodecRedisController struct {
 
 // new HashJsonCodec redis controller with redis pool
 func NewHashJsonCodecRedisController(pool *github_com_gomodule_redigo_redis.Pool) *HashJsonCodecRedisController {
-	return &HashJsonCodecRedisController{pool: pool}
+	return &HashJsonCodecRedisController{pool: pool, m: new(HashJsonCodec)}
 }
 
 // get HashJsonCodec
 func (r *HashJsonCodecRedisController) HashJsonCodec() *HashJsonCodec {
 	return r.m
+}
+
+// set HashJsonCodec
+func (r *HashJsonCodecRedisController) SetHashJsonCodec(m *HashJsonCodec) {
+	r.m = m
 }
 
 // load HashJsonCodec from redis hash with context and key
@@ -132,7 +160,42 @@ func (r *HashJsonCodecRedisController) Load(ctx context.Context, key string) err
 }
 
 // store HashJsonCodec to redis hash with context and key
-func (r *HashJsonCodecRedisController) Store(ctx context.Context, key string, ttl uint64) error {
+func (r *HashJsonCodecRedisController) Store(ctx context.Context, key string) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// make args
+	args := make([]interface{}, 0)
+
+	// add redis key
+	args = append(args, key)
+
+	// add redis field and value
+	args = append(args, "SomeString", r.m.SomeString)
+	args = append(args, "SomeBool", r.m.SomeBool)
+	args = append(args, "SomeInt32", r.m.SomeInt32)
+	args = append(args, "SomeUint32", r.m.SomeUint32)
+	args = append(args, "SomeInt64", r.m.SomeInt64)
+	args = append(args, "SomeUint64", r.m.SomeUint64)
+	args = append(args, "SomeFloat", r.m.SomeFloat)
+	// marshal HashJsonCodec
+	if r.m.HashJsonCodec != nil {
+		HashJsonCodec, HashJsonCodecError := github_com_json_iterator_go.Marshal(r.m.HashJsonCodec)
+		if HashJsonCodecError != nil {
+			return HashJsonCodecError
+		}
+		args = append(args, "HashJsonCodec", HashJsonCodec)
+	}
+
+	// use redis hash store HashJsonCodec data
+	_, err := conn.Do("HMSET", args...)
+
+	return err
+}
+
+// store HashJsonCodec to redis hash with context, key and ttl expire second
+func (r *HashJsonCodecRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()

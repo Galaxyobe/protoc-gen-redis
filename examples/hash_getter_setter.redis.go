@@ -33,12 +33,17 @@ type HashGetterAndSetterTypeRedisController struct {
 
 // new HashGetterAndSetterType redis controller with redis pool
 func NewHashGetterAndSetterTypeRedisController(pool *github_com_gomodule_redigo_redis.Pool) *HashGetterAndSetterTypeRedisController {
-	return &HashGetterAndSetterTypeRedisController{pool: pool}
+	return &HashGetterAndSetterTypeRedisController{pool: pool, m: new(HashGetterAndSetterType)}
 }
 
 // get HashGetterAndSetterType
 func (r *HashGetterAndSetterTypeRedisController) HashGetterAndSetterType() *HashGetterAndSetterType {
 	return r.m
+}
+
+// set HashGetterAndSetterType
+func (r *HashGetterAndSetterTypeRedisController) SetHashGetterAndSetterType(m *HashGetterAndSetterType) {
+	r.m = m
 }
 
 // load HashGetterAndSetterType from redis hash with context and key
@@ -67,7 +72,35 @@ func (r *HashGetterAndSetterTypeRedisController) Load(ctx context.Context, key s
 }
 
 // store HashGetterAndSetterType to redis hash with context and key
-func (r *HashGetterAndSetterTypeRedisController) Store(ctx context.Context, key string, ttl uint64) error {
+func (r *HashGetterAndSetterTypeRedisController) Store(ctx context.Context, key string) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// make args
+	args := make([]interface{}, 0)
+
+	// add redis key
+	args = append(args, key)
+
+	// add redis field and value
+	args = append(args, "SomeString", r.m.SomeString)
+	args = append(args, "SomeBool", r.m.SomeBool)
+	args = append(args, "SomeInt32", r.m.SomeInt32)
+	args = append(args, "SomeUint32", r.m.SomeUint32)
+	args = append(args, "SomeInt64", r.m.SomeInt64)
+	args = append(args, "SomeUint64", r.m.SomeUint64)
+	args = append(args, "SomeFloat", r.m.SomeFloat)
+	args = append(args, "SomeEnum", r.m.SomeEnum)
+
+	// use redis hash store HashGetterAndSetterType data
+	_, err := conn.Do("HMSET", args...)
+
+	return err
+}
+
+// store HashGetterAndSetterType to redis hash with context, key and ttl expire second
+func (r *HashGetterAndSetterTypeRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()

@@ -11,8 +11,6 @@ option go_package = "redis";
 extend google.protobuf.MessageOptions {
     // enabled generate, default is false
     bool enabled = 65000;
-    // support key expire unit: second, default is true
-    bool ttl = 65001;
     // storage type: string | hash, default is string
     string storage_type = 65002;
     // storage codec: proto | json, default is proto

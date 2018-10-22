@@ -33,7 +33,7 @@ type StringProtoCodecRedisController struct {
 
 // new StringProtoCodec redis controller with redis pool
 func NewStringProtoCodecRedisController(pool *github_com_gomodule_redigo_redis.Pool) *StringProtoCodecRedisController {
-	return &StringProtoCodecRedisController{pool: pool}
+	return &StringProtoCodecRedisController{pool: pool, m: new(StringProtoCodec)}
 }
 
 // get StringProtoCodec
@@ -41,8 +41,31 @@ func (r *StringProtoCodecRedisController) StringProtoCodec() *StringProtoCodec {
 	return r.m
 }
 
+// set StringProtoCodec
+func (r *StringProtoCodecRedisController) SetStringProtoCodec(m *StringProtoCodec) {
+	r.m = m
+}
+
 // store StringProtoCodec to redis string with context and key
-func (r *StringProtoCodecRedisController) Store(ctx context.Context, key string, ttl uint64) error {
+func (r *StringProtoCodecRedisController) Store(ctx context.Context, key string) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// marshal StringProtoCodec to []byte
+	data, err := proto.Marshal(r.m)
+	if err != nil {
+		return err
+	}
+
+	// use redis string store StringProtoCodec data
+	_, err = conn.Do("SET", key, data)
+
+	return err
+}
+
+// store StringProtoCodec to redis string with context, key and ttl expire second
+func (r *StringProtoCodecRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -91,12 +114,17 @@ type HashProtoCodecRedisController struct {
 
 // new HashProtoCodec redis controller with redis pool
 func NewHashProtoCodecRedisController(pool *github_com_gomodule_redigo_redis.Pool) *HashProtoCodecRedisController {
-	return &HashProtoCodecRedisController{pool: pool}
+	return &HashProtoCodecRedisController{pool: pool, m: new(HashProtoCodec)}
 }
 
 // get HashProtoCodec
 func (r *HashProtoCodecRedisController) HashProtoCodec() *HashProtoCodec {
 	return r.m
+}
+
+// set HashProtoCodec
+func (r *HashProtoCodecRedisController) SetHashProtoCodec(m *HashProtoCodec) {
+	r.m = m
 }
 
 // load HashProtoCodec from redis hash with context and key
@@ -131,7 +159,42 @@ func (r *HashProtoCodecRedisController) Load(ctx context.Context, key string) er
 }
 
 // store HashProtoCodec to redis hash with context and key
-func (r *HashProtoCodecRedisController) Store(ctx context.Context, key string, ttl uint64) error {
+func (r *HashProtoCodecRedisController) Store(ctx context.Context, key string) error {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// make args
+	args := make([]interface{}, 0)
+
+	// add redis key
+	args = append(args, key)
+
+	// add redis field and value
+	args = append(args, "SomeString", r.m.SomeString)
+	args = append(args, "SomeBool", r.m.SomeBool)
+	args = append(args, "SomeInt32", r.m.SomeInt32)
+	args = append(args, "SomeUint32", r.m.SomeUint32)
+	args = append(args, "SomeInt64", r.m.SomeInt64)
+	args = append(args, "SomeUint64", r.m.SomeUint64)
+	args = append(args, "SomeFloat", r.m.SomeFloat)
+	// marshal HashProtoCodec
+	if r.m.HashProtoCodec != nil {
+		HashProtoCodec, HashProtoCodecError := proto.Marshal(r.m.HashProtoCodec)
+		if HashProtoCodecError != nil {
+			return HashProtoCodecError
+		}
+		args = append(args, "HashProtoCodec", HashProtoCodec)
+	}
+
+	// use redis hash store HashProtoCodec data
+	_, err := conn.Do("HMSET", args...)
+
+	return err
+}
+
+// store HashProtoCodec to redis hash with context, key and ttl expire second
+func (r *HashProtoCodecRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
