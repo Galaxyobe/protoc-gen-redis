@@ -20,6 +20,7 @@ const (
 
 type generateField struct {
 	Name             string
+	JsonName         string
 	Value            string
 	Type             string
 	GoType           string
@@ -28,6 +29,9 @@ type generateField struct {
 	RedisTypeReplace bool
 	Setter           bool
 	Getter           bool
+	IsArray          bool
+	Marshal          string
+	Unmarshal        string
 }
 
 type generateData struct {
@@ -240,8 +244,14 @@ func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key 
 			{{- if eq .Type "TYPE_MESSAGE" }}
 			case "{{.Name}}":
 				// unmarshal {{.Name}}
-				r.m.{{.Name}} = new({{.NewGoType}})
-				if err := {{$.CodecPkg}}.Unmarshal(data[i+1], r.m.{{.Name}}); err != nil {
+				if r.m.{{.Name}} == nil {
+					{{- if .IsArray }}
+					r.m.{{.Name}} = make({{.NewGoType}}, 0)
+					{{- else }}
+					r.m.{{.Name}} = new({{.NewGoType}})
+					{{- end }}
+				}
+				if err := {{.Unmarshal}}(data[i+1], {{if .IsArray}}&{{end}}r.m.{{.Name}}); err != nil {
 					return err	
 				}
 			{{- end }}
@@ -275,12 +285,14 @@ func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key
 		{{- if eq .Type "TYPE_MESSAGE" }}
 			// marshal {{.Name}}
 			if r.m.{{.Name}} != nil {
-				{{.Name}}, {{.Name}}Error := {{$.CodecPkg}}.Marshal(r.m.{{.Name}})
+				{{.Name}}, {{.Name}}Error := {{.Marshal}}(r.m.{{.Name}})
 				if {{.Name}}Error != nil {
 					return {{.Name}}Error
 				}
 				args = append(args, "{{.Name}}", {{.Name}})
 			}
+		{{- else if eq .Type "TYPE_ENUM" }}
+		   	args = append(args, "{{.Name}}", int32({{.Value}}))
 		{{- else }}
 			args = append(args, "{{.Name}}", {{.Value}})
 		{{- end }}
@@ -309,12 +321,14 @@ func (r *{{.MessageName}}RedisController) StoreWithTTL(ctx {{.ContextPkg}}.Conte
 		{{- if eq .Type "TYPE_MESSAGE" }}
 			// marshal {{.Name}}
 			if r.m.{{.Name}} != nil {
-				{{.Name}}, {{.Name}}Error := {{$.CodecPkg}}.Marshal(r.m.{{.Name}})
+				{{.Name}}, {{.Name}}Error := {{.Marshal}}(r.m.{{.Name}})
 				if {{.Name}}Error != nil {
 					return {{.Name}}Error
 				}
 				args = append(args, "{{.Name}}", {{.Name}})
 			}
+		{{- else if eq .Type "TYPE_ENUM" }}
+		   	args = append(args, "{{.Name}}", int32({{.Value}}))
 		{{- else }}
 			args = append(args, "{{.Name}}", {{.Value}})
 		{{- end }}
@@ -345,9 +359,12 @@ func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 	for _, field := range message.Field {
 		name := generator.CamelCase(*field.Name)
 		generateField := &generateField{
-			Name:  name,
-			Value: "r.m." + name,
-			Type:  field.Type.String(),
+			Name:      name,
+			JsonName:  *field.JsonName,
+			Value:     "r.m." + name,
+			Type:      field.Type.String(),
+			Marshal:   data.CodecPkg + ".Marshal",
+			Unmarshal: data.CodecPkg + ".Unmarshal",
 		}
 
 		// hash field getter option
@@ -360,7 +377,17 @@ func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 			p.Generator.RecordTypeUse(*field.TypeName)
 		}
 		generateField.GoType, _ = p.Generator.GoType(message, field)
-		generateField.NewGoType = strings.Replace(generateField.GoType, "*", "", -1)
+		if strings.HasPrefix(generateField.GoType, "*") {
+			generateField.NewGoType = generateField.GoType[1:]
+		} else if strings.HasPrefix(generateField.GoType, "[]") {
+			generateField.IsArray = true
+			generateField.NewGoType = generateField.GoType
+			if data.CodecPkg == "proto" {
+				pkg := p.NewImport(jsonPkg).Use()
+				generateField.Marshal = pkg + ".Marshal"
+				generateField.Unmarshal = pkg + ".Unmarshal"
+			}
+		}
 		generateField.RedisType = generator.CamelCase(generateField.GoType)
 		// redis go just have 64-bit function
 		if strings.Contains(generateField.RedisType, "32") {
@@ -368,6 +395,7 @@ func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 			generateField.RedisTypeReplace = true
 		}
 		data.Fields = append(data.Fields, generateField)
+		//log.Println(generateField)
 	}
 
 	// hash load function
@@ -387,14 +415,14 @@ func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 // get basic type from redis by hash field
 const getBasicTypeFromRedisHashFuncTemplate = `
 // get {{.MessageName}} {{.Name}} field value with key 
-func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) ({{.Name}} {{.GoType}}, err error) {
+func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) ({{.JsonName}} {{.GoType}}, err error) {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
 
 	// get {{.Name}} field
 	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, "{{.Name}}")); err != nil {
-		return {{.Name}}, err
+		return {{.JsonName}}, err
 	} else {
 		{{- if .RedisTypeReplace}}
 			r.m.{{.Name}} = {{.GoType}}(value)
@@ -410,14 +438,18 @@ func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) ({{.Name}} {{
 // set basic type from redis by hash field
 const setBasicTypeFromRedisHashFuncTemplate = `
 // set {{.MessageName}} {{.Name}} field with key and {{.Name}} 
-func (r *{{.MessageName}}RedisController) Set{{.Name}}(key string, {{.Name}} {{.GoType}}) (err error) {
+func (r *{{.MessageName}}RedisController) Set{{.Name}}(key string, {{.JsonName}} {{.GoType}}) (err error) {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
 
 	// set {{.Name}} field
-	r.m.{{.Name}} = {{.Name}}
-	_, err = conn.Do("HSET", key, "{{.Name}}", {{.Name}})
+	r.m.{{.Name}} = {{.JsonName}}
+	{{- if eq .Type "TYPE_ENUM" }}
+	_, err = conn.Do("HSET", key, "{{.Name}}", int32({{.JsonName}}))
+	{{- else }}
+	_, err = conn.Do("HSET", key, "{{.Name}}", {{.JsonName}})
+    {{- end}}
 
 	return
 }
@@ -426,19 +458,25 @@ func (r *{{.MessageName}}RedisController) Set{{.Name}}(key string, {{.Name}} {{.
 // get message type from redis by hash field
 const getMessageTypeFromRedisHashFuncTemplate = `
 // get {{.MessageName}} {{.Name}} field value with key 
-func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) ({{.Name}} {{.GoType}}, err error) {
+func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) (ret {{.GoType}}, err error) {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
 
 	// get {{.Name}} field
 	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, "{{.Name}}")); err != nil {
-		return {{.Name}}, err
+		return ret, err
 	} else {
 		// unmarshal {{.Name}}
-		r.m.{{.Name}} = new({{.NewGoType}})
-		if err = {{.CodecPkg}}.Unmarshal(value, r.m.{{.Name}}); err != nil {
-			return {{.Name}}, err
+		if r.m.{{.Name}} == nil {
+			{{- if .IsArray }}
+			r.m.{{.Name}} = make({{.NewGoType}}, 0)
+			{{- else }}
+			r.m.{{.Name}} = new({{.NewGoType}})
+			{{- end }}
+		}
+		if err = {{.Unmarshal}}(value, r.m.{{.Name}}); err != nil {
+			return ret, err
 		}
     }
 
@@ -449,21 +487,19 @@ func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) ({{.Name}} {{
 // set message type from redis by hash field
 const setMessageTypeFromRedisHashFuncTemplate = `
 // set {{.MessageName}} {{.Name}} field with key and {{.Name}} 
-func (r *{{.MessageName}}RedisController) Set{{.Name}}(key string, {{.Name}} {{.GoType}}) error {
+func (r *{{.MessageName}}RedisController) Set{{.Name}}{{if eq .Name .NewGoType}}Field{{end}}(key string, {{.JsonName}} {{.GoType}}) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
 
 	// marshal {{.Name}}
-	if r.m.{{.Name}} != nil {
-		r.m.{{.Name}} = {{.Name}}
-		if data, err := {{.CodecPkg}}.Marshal(r.m.{{.Name}}); err != nil {
-			return err
-		} else {
-			// set {{.Name}} field
-			_, err = conn.Do("HSET", key, "{{.Name}}", data)
-			return err 
-		}
+	r.m.{{.Name}} = {{.JsonName}}
+	if data, err := {{.Marshal}}(r.m.{{.Name}}); err != nil {
+		return err
+	} else {
+		// set {{.Name}} field
+		_, err = conn.Do("HSET", key, "{{.Name}}", data)
+		return err 
 	}
 
 	return nil
@@ -519,7 +555,7 @@ func (p *plugin) generateRedisHashFieldFunc(data *generateData) {
 		default:
 			return
 		}
-		
+
 		if field.Getter {
 			if getTemplateName != "" {
 				tmpl, _ := template.New("hash-get").Parse(getTemplateName)
@@ -528,7 +564,7 @@ func (p *plugin) generateRedisHashFieldFunc(data *generateData) {
 				}
 			}
 		}
-		
+
 		if field.Setter {
 			if setTemplateName != "" {
 				tmpl, _ := template.New("hash-set").Parse(setTemplateName)

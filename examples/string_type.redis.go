@@ -97,73 +97,73 @@ func (r *StringStorageTypeRedisController) Load(ctx context.Context, key string)
 	return proto.Unmarshal(data, r.m)
 }
 
-// new StringStorageTyp2 redis controller with redis pool
-func (m *StringStorageTyp2) RedisController(pool *github_com_gomodule_redigo_redis.Pool) *StringStorageTyp2RedisController {
-	return &StringStorageTyp2RedisController{
+// new StringStorageType2 redis controller with redis pool
+func (m *StringStorageType2) RedisController(pool *github_com_gomodule_redigo_redis.Pool) *StringStorageType2RedisController {
+	return &StringStorageType2RedisController{
 		pool: pool,
 		m:    m,
 	}
 }
 
-// StringStorageTyp2 redis controller
-type StringStorageTyp2RedisController struct {
+// StringStorageType2 redis controller
+type StringStorageType2RedisController struct {
 	pool *github_com_gomodule_redigo_redis.Pool
-	m    *StringStorageTyp2
+	m    *StringStorageType2
 }
 
-// new StringStorageTyp2 redis controller with redis pool
-func NewStringStorageTyp2RedisController(pool *github_com_gomodule_redigo_redis.Pool) *StringStorageTyp2RedisController {
-	return &StringStorageTyp2RedisController{pool: pool, m: new(StringStorageTyp2)}
+// new StringStorageType2 redis controller with redis pool
+func NewStringStorageType2RedisController(pool *github_com_gomodule_redigo_redis.Pool) *StringStorageType2RedisController {
+	return &StringStorageType2RedisController{pool: pool, m: new(StringStorageType2)}
 }
 
-// get StringStorageTyp2
-func (r *StringStorageTyp2RedisController) StringStorageTyp2() *StringStorageTyp2 {
+// get StringStorageType2
+func (r *StringStorageType2RedisController) StringStorageType2() *StringStorageType2 {
 	return r.m
 }
 
-// set StringStorageTyp2
-func (r *StringStorageTyp2RedisController) SetStringStorageTyp2(m *StringStorageTyp2) {
+// set StringStorageType2
+func (r *StringStorageType2RedisController) SetStringStorageType2(m *StringStorageType2) {
 	r.m = m
 }
 
-// store StringStorageTyp2 to redis string with context and key
-func (r *StringStorageTyp2RedisController) Store(ctx context.Context, key string) error {
+// store StringStorageType2 to redis string with context and key
+func (r *StringStorageType2RedisController) Store(ctx context.Context, key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
 
-	// marshal StringStorageTyp2 to []byte
+	// marshal StringStorageType2 to []byte
 	data, err := proto.Marshal(r.m)
 	if err != nil {
 		return err
 	}
 
-	// use redis string store StringStorageTyp2 data
+	// use redis string store StringStorageType2 data
 	_, err = conn.Do("SET", key, data)
 
 	return err
 }
 
-// store StringStorageTyp2 to redis string with context, key and ttl expire second
-func (r *StringStorageTyp2RedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
+// store StringStorageType2 to redis string with context, key and ttl expire second
+func (r *StringStorageType2RedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
 
-	// marshal StringStorageTyp2 to []byte
+	// marshal StringStorageType2 to []byte
 	data, err := proto.Marshal(r.m)
 	if err != nil {
 		return err
 	}
 
-	// use redis string store StringStorageTyp2 data with expire second
+	// use redis string store StringStorageType2 data with expire second
 	_, err = conn.Do("SETEX", key, ttl, data)
 
 	return err
 }
 
-// load StringStorageTyp2 from redis string with context and key
-func (r *StringStorageTyp2RedisController) Load(ctx context.Context, key string) error {
+// load StringStorageType2 from redis string with context and key
+func (r *StringStorageType2RedisController) Load(ctx context.Context, key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()

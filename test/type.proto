@@ -5,6 +5,30 @@ import "github.com/galaxyobe/protoc-gen-redis/proto/redis.proto";
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
+message StringStorageType {
+    // enabled generate, default is false
+    option (redis.enabled) = true;
+    // storage type: string | hash, default is string
+    option (redis.storage_type) = "string";
+    string some_string = 1;
+    bool some_bool = 2;
+    int32 some_int32 = 3;
+    uint32 some_uint32 = 4;
+    int64 some_int64 = 5;
+    uint64 some_uint64 = 6;
+    float some_float = 7;
+    enum Enum {
+        E1 = 0;
+        E2 = 1;
+        E3 = 2;
+    }
+    Enum some_enum = 8;
+    google.protobuf.Timestamp timestamp = 9;
+    StringStorageType StringStorageType = 10;
+    repeated StringStorageType some_messages = 11;
+    repeated google.protobuf.Timestamp timestamps = 12;
+}
+
 message HashStorageType {
     // enabled generate, default is false
     option (redis.enabled) = true;
@@ -20,18 +44,11 @@ message HashStorageType {
     enum Enum {
         E1 = 0;
         E2 = 1;
+        E3 = 2;
     }
     Enum some_enum = 8;
-}
-
-
-message HashStorageType2 {
-    // enabled generate, default is false
-    option (redis.enabled) = true;
-    // storage type: string | hash, default is string
-    option (redis.storage_type) = "hash";
-    HashStorageType some_message = 8;
     google.protobuf.Timestamp timestamp = 9;
-    repeated HashStorageType some_messages = 10;
+    HashStorageType HashStorageType = 10;
+    repeated HashStorageType some_messages = 11;
+    repeated google.protobuf.Timestamp timestamps = 12;
 }
-

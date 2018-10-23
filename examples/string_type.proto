@@ -9,10 +9,21 @@ message StringStorageType {
     option (redis.enabled) = true;
     // storage type: string | hash, default is string
     option (redis.storage_type) = "string";
-    int32 some_integer = 1;
+    string some_string = 1;
+    bool some_bool = 2;
+    int32 some_int32 = 3;
+    uint32 some_uint32 = 4;
+    int64 some_int64 = 5;
+    uint64 some_uint64 = 6;
+    float some_float = 7;
+    enum Enum {
+        E1 = 0;
+        E2 = 1;
+    }
+    Enum some_enum = 8;
 }
 
-message StringStorageTyp2 {
+message StringStorageType2 {
     // enabled generate, default is false
     option (redis.enabled) = true;
     int32 some_integer = 1;
