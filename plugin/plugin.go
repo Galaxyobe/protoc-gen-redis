@@ -244,13 +244,11 @@ func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key 
 			{{- if eq .Type "TYPE_MESSAGE" }}
 			case "{{.Name}}":
 				// unmarshal {{.Name}}
+				{{- if not .IsArray }}
 				if r.m.{{.Name}} == nil {
-					{{- if .IsArray }}
-					r.m.{{.Name}} = make({{.NewGoType}}, 0)
-					{{- else }}
 					r.m.{{.Name}} = new({{.NewGoType}})
-					{{- end }}
 				}
+				{{- end }}
 				if err := {{.Unmarshal}}(data[i+1], {{if .IsArray}}&{{end}}r.m.{{.Name}}); err != nil {
 					return err	
 				}
@@ -468,14 +466,12 @@ func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) (ret {{.GoTyp
 		return ret, err
 	} else {
 		// unmarshal {{.Name}}
+		{{- if not .IsArray }}
 		if r.m.{{.Name}} == nil {
-			{{- if .IsArray }}
-			r.m.{{.Name}} = make({{.NewGoType}}, 0)
-			{{- else }}
 			r.m.{{.Name}} = new({{.NewGoType}})
-			{{- end }}
 		}
-		if err = {{.Unmarshal}}(value, r.m.{{.Name}}); err != nil {
+		{{- end }}
+		if err = {{.Unmarshal}}(value, {{if .IsArray}}&{{end}}r.m.{{.Name}}); err != nil {
 			return ret, err
 		}
     }

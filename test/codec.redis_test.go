@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 )
 
-func TestStringStorageTypeRedisController_Store(t *testing.T) {
+func TestJsonStringStorageTypeRedisController_Store(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -29,7 +29,7 @@ func TestStringStorageTypeRedisController_Store(t *testing.T) {
 		},
 	}
 
-	object := &StringStorageType{}
+	object := &JsonStringStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -37,35 +37,35 @@ func TestStringStorageTypeRedisController_Store(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = StringStorageType_E1
+	object.SomeEnum = JsonStringStorageType_E1
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	ctl := NewStringStorageTypeRedisController(pool)
+	ctl := NewJsonStringStorageTypeRedisController(pool)
 
-	ctl.StringStorageType().SomeString = "SomeString"
-	ctl.StringStorageType().SomeBool = true
-	ctl.StringStorageType().SomeInt32 = -125
-	ctl.StringStorageType().SomeUint32 = 255
-	ctl.StringStorageType().SomeInt64 = -255
-	ctl.StringStorageType().SomeUint64 = 255
-	ctl.StringStorageType().SomeFloat = -1.25
-	ctl.StringStorageType().SomeEnum = StringStorageType_E2
-	ctl.StringStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
-	ctl.StringStorageType().StringStorageType = object
-	ctl.StringStorageType().SomeMessages = append(ctl.StringStorageType().SomeMessages, object)
-	ctl.StringStorageType().Timestamps = append(ctl.StringStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
+	ctl.JsonStringStorageType().SomeString = "SomeString"
+	ctl.JsonStringStorageType().SomeBool = true
+	ctl.JsonStringStorageType().SomeInt32 = -125
+	ctl.JsonStringStorageType().SomeUint32 = 255
+	ctl.JsonStringStorageType().SomeInt64 = -255
+	ctl.JsonStringStorageType().SomeUint64 = 255
+	ctl.JsonStringStorageType().SomeFloat = -1.25
+	ctl.JsonStringStorageType().SomeEnum = JsonStringStorageType_E2
+	ctl.JsonStringStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
+	ctl.JsonStringStorageType().JsonStringStorageType = object
+	ctl.JsonStringStorageType().SomeMessages = append(ctl.JsonStringStorageType().SomeMessages, object)
+	ctl.JsonStringStorageType().Timestamps = append(ctl.JsonStringStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	key := "TestStringStorageTypeRedisController_Store"
+	key := "TestJsonStringStorageTypeRedisController_Store"
 
 	if err = ctl.Store(context.Background(), key); err != nil {
 		t.Error(err)
 	}
 
-	s.CheckGet(t, key, "\n\nSomeString\x10\x01\x18\x83\xff\xff\xff\xff\xff\xff\xff\xff\x01 \xff\x01(\x81\xfe\xff\xff\xff\xff\xff\xff\xff\x010\xff\x01=\x00\x00\xa0\xbf@\x01J\x04\b\x03\x10\x04RA\n\nSomeString\x10\x01\x18\x83\xff\xff\xff\xff\xff\xff\xff\xff\x01 \xff\x01(\x81\xfe\xff\xff\xff\xff\xff\xff\xff\x010\xff\x01=\x00\x00\xa0\xbfJ\x04\b\x01\x10\x02b\x04\b\x01\x10\x02b\x04\b\x14\x104ZA\n\nSomeString\x10\x01\x18\x83\xff\xff\xff\xff\xff\xff\xff\xff\x01 \xff\x01(\x81\xfe\xff\xff\xff\xff\xff\xff\xff\x010\xff\x01=\x00\x00\xa0\xbfJ\x04\b\x01\x10\x02b\x04\b\x01\x10\x02b\x04\b\x14\x104b\x04\b\x01\x10\x02b\x04\b\x14\x104")
+	s.CheckGet(t, key, "{\"some_string\":\"SomeString\",\"some_bool\":true,\"some_int32\":-125,\"some_uint32\":255,\"some_int64\":-255,\"some_uint64\":255,\"some_float\":-1.25,\"some_enum\":1,\"timestamp\":{\"seconds\":3,\"nanos\":4},\"JsonStringStorageType\":{\"some_string\":\"SomeString\",\"some_bool\":true,\"some_int32\":-125,\"some_uint32\":255,\"some_int64\":-255,\"some_uint64\":255,\"some_float\":-1.25,\"timestamp\":{\"seconds\":1,\"nanos\":2},\"timestamps\":[{\"seconds\":1,\"nanos\":2},{\"seconds\":20,\"nanos\":52}]},\"some_messages\":[{\"some_string\":\"SomeString\",\"some_bool\":true,\"some_int32\":-125,\"some_uint32\":255,\"some_int64\":-255,\"some_uint64\":255,\"some_float\":-1.25,\"timestamp\":{\"seconds\":1,\"nanos\":2},\"timestamps\":[{\"seconds\":1,\"nanos\":2},{\"seconds\":20,\"nanos\":52}]}],\"timestamps\":[{\"seconds\":1,\"nanos\":2},{\"seconds\":20,\"nanos\":52}]}")
 }
 
-func TestStringStorageTypeRedisController_StoreWithTTL(t *testing.T) {
+func TestJsonStringStorageTypeRedisController_StoreWithTTL(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -83,7 +83,7 @@ func TestStringStorageTypeRedisController_StoreWithTTL(t *testing.T) {
 		},
 	}
 
-	object := &StringStorageType{}
+	object := &JsonStringStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -91,32 +91,32 @@ func TestStringStorageTypeRedisController_StoreWithTTL(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = StringStorageType_E1
+	object.SomeEnum = JsonStringStorageType_E1
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	ctl := NewStringStorageTypeRedisController(pool)
+	ctl := NewJsonStringStorageTypeRedisController(pool)
 
-	ctl.StringStorageType().SomeString = "SomeString"
-	ctl.StringStorageType().SomeBool = true
-	ctl.StringStorageType().SomeInt32 = -125
-	ctl.StringStorageType().SomeUint32 = 255
-	ctl.StringStorageType().SomeInt64 = -255
-	ctl.StringStorageType().SomeUint64 = 255
-	ctl.StringStorageType().SomeFloat = -1.25
-	ctl.StringStorageType().SomeEnum = StringStorageType_E2
-	ctl.StringStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
-	ctl.StringStorageType().StringStorageType = object
-	ctl.StringStorageType().SomeMessages = append(ctl.StringStorageType().SomeMessages, object)
-	ctl.StringStorageType().Timestamps = append(ctl.StringStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
+	ctl.JsonStringStorageType().SomeString = "SomeString"
+	ctl.JsonStringStorageType().SomeBool = true
+	ctl.JsonStringStorageType().SomeInt32 = -125
+	ctl.JsonStringStorageType().SomeUint32 = 255
+	ctl.JsonStringStorageType().SomeInt64 = -255
+	ctl.JsonStringStorageType().SomeUint64 = 255
+	ctl.JsonStringStorageType().SomeFloat = -1.25
+	ctl.JsonStringStorageType().SomeEnum = JsonStringStorageType_E2
+	ctl.JsonStringStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
+	ctl.JsonStringStorageType().JsonStringStorageType = object
+	ctl.JsonStringStorageType().SomeMessages = append(ctl.JsonStringStorageType().SomeMessages, object)
+	ctl.JsonStringStorageType().Timestamps = append(ctl.JsonStringStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	key := "TestStringStorageTypeRedisController_StoreWithTTL"
+	key := "TestJsonStringStorageTypeRedisController_StoreWithTTL"
 
 	if err = ctl.StoreWithTTL(context.Background(), key, 30); err != nil {
 		t.Error(err)
 	}
 
-	s.CheckGet(t, key, "\n\nSomeString\x10\x01\x18\x83\xff\xff\xff\xff\xff\xff\xff\xff\x01 \xff\x01(\x81\xfe\xff\xff\xff\xff\xff\xff\xff\x010\xff\x01=\x00\x00\xa0\xbf@\x01J\x04\b\x03\x10\x04RA\n\nSomeString\x10\x01\x18\x83\xff\xff\xff\xff\xff\xff\xff\xff\x01 \xff\x01(\x81\xfe\xff\xff\xff\xff\xff\xff\xff\x010\xff\x01=\x00\x00\xa0\xbfJ\x04\b\x01\x10\x02b\x04\b\x01\x10\x02b\x04\b\x14\x104ZA\n\nSomeString\x10\x01\x18\x83\xff\xff\xff\xff\xff\xff\xff\xff\x01 \xff\x01(\x81\xfe\xff\xff\xff\xff\xff\xff\xff\x010\xff\x01=\x00\x00\xa0\xbfJ\x04\b\x01\x10\x02b\x04\b\x01\x10\x02b\x04\b\x14\x104b\x04\b\x01\x10\x02b\x04\b\x14\x104")
+	s.CheckGet(t, key, "{\"some_string\":\"SomeString\",\"some_bool\":true,\"some_int32\":-125,\"some_uint32\":255,\"some_int64\":-255,\"some_uint64\":255,\"some_float\":-1.25,\"some_enum\":1,\"timestamp\":{\"seconds\":3,\"nanos\":4},\"JsonStringStorageType\":{\"some_string\":\"SomeString\",\"some_bool\":true,\"some_int32\":-125,\"some_uint32\":255,\"some_int64\":-255,\"some_uint64\":255,\"some_float\":-1.25,\"timestamp\":{\"seconds\":1,\"nanos\":2},\"timestamps\":[{\"seconds\":1,\"nanos\":2},{\"seconds\":20,\"nanos\":52}]},\"some_messages\":[{\"some_string\":\"SomeString\",\"some_bool\":true,\"some_int32\":-125,\"some_uint32\":255,\"some_int64\":-255,\"some_uint64\":255,\"some_float\":-1.25,\"timestamp\":{\"seconds\":1,\"nanos\":2},\"timestamps\":[{\"seconds\":1,\"nanos\":2},{\"seconds\":20,\"nanos\":52}]}],\"timestamps\":[{\"seconds\":1,\"nanos\":2},{\"seconds\":20,\"nanos\":52}]}")
 
 	s.FastForward(29 * time.Second)
 
@@ -131,7 +131,7 @@ func TestStringStorageTypeRedisController_StoreWithTTL(t *testing.T) {
 	}
 }
 
-func TestStringStorageTypeRedisController_Load(t *testing.T) {
+func TestJsonStringStorageTypeRedisController_Load(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -149,7 +149,7 @@ func TestStringStorageTypeRedisController_Load(t *testing.T) {
 		},
 	}
 
-	object := &StringStorageType{}
+	object := &JsonStringStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -157,43 +157,43 @@ func TestStringStorageTypeRedisController_Load(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = StringStorageType_E1
+	object.SomeEnum = JsonStringStorageType_E1
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	ctl := NewStringStorageTypeRedisController(pool)
+	ctl := NewJsonStringStorageTypeRedisController(pool)
 
-	ctl.StringStorageType().SomeString = "SomeString"
-	ctl.StringStorageType().SomeBool = true
-	ctl.StringStorageType().SomeInt32 = -125
-	ctl.StringStorageType().SomeUint32 = 255
-	ctl.StringStorageType().SomeInt64 = -255
-	ctl.StringStorageType().SomeUint64 = 255
-	ctl.StringStorageType().SomeFloat = -1.25
-	ctl.StringStorageType().SomeEnum = StringStorageType_E2
-	ctl.StringStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
-	ctl.StringStorageType().StringStorageType = object
-	ctl.StringStorageType().SomeMessages = append(ctl.StringStorageType().SomeMessages, object)
-	ctl.StringStorageType().Timestamps = append(ctl.StringStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
+	ctl.JsonStringStorageType().SomeString = "SomeString"
+	ctl.JsonStringStorageType().SomeBool = true
+	ctl.JsonStringStorageType().SomeInt32 = -125
+	ctl.JsonStringStorageType().SomeUint32 = 255
+	ctl.JsonStringStorageType().SomeInt64 = -255
+	ctl.JsonStringStorageType().SomeUint64 = 255
+	ctl.JsonStringStorageType().SomeFloat = -1.25
+	ctl.JsonStringStorageType().SomeEnum = JsonStringStorageType_E2
+	ctl.JsonStringStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
+	ctl.JsonStringStorageType().JsonStringStorageType = object
+	ctl.JsonStringStorageType().SomeMessages = append(ctl.JsonStringStorageType().SomeMessages, object)
+	ctl.JsonStringStorageType().Timestamps = append(ctl.JsonStringStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	key := "TestStringStorageTypeRedisController_Load"
+	key := "TestJsonStringStorageTypeRedisController_Load"
 
 	if err = ctl.Store(context.Background(), key); err != nil {
 		t.Error(err)
 	}
 
-	ctl2 := NewStringStorageTypeRedisController(pool)
+	ctl2 := NewJsonStringStorageTypeRedisController(pool)
 
 	if err = ctl2.Load(context.Background(), key); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.StringStorageType().String() != ctl2.StringStorageType().String() {
+	if ctl.JsonStringStorageType().String() != ctl2.JsonStringStorageType().String() {
 		t.Fatalf("load %v should be %v", ctl2, ctl)
 	}
 }
 
-func TestHashStorageTypeRedisController_Store(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_Store(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -211,7 +211,7 @@ func TestHashStorageTypeRedisController_Store(t *testing.T) {
 		},
 	}
 
-	object := &HashStorageType{}
+	object := &JsonHashStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -219,26 +219,26 @@ func TestHashStorageTypeRedisController_Store(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = HashStorageType_E3
+	object.SomeEnum = JsonHashStorageType_E3
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
-	ctl.HashStorageType().SomeString = "SomeString"
-	ctl.HashStorageType().SomeBool = true
-	ctl.HashStorageType().SomeInt32 = -125
-	ctl.HashStorageType().SomeUint32 = 255
-	ctl.HashStorageType().SomeInt64 = -255
-	ctl.HashStorageType().SomeUint64 = 255
-	ctl.HashStorageType().SomeFloat = -1.25
-	ctl.HashStorageType().SomeEnum = HashStorageType_E2
-	ctl.HashStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
-	ctl.HashStorageType().HashStorageType = object
-	ctl.HashStorageType().SomeMessages = append(ctl.HashStorageType().SomeMessages, object)
-	ctl.HashStorageType().Timestamps = append(ctl.HashStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
+	ctl.JsonHashStorageType().SomeString = "SomeString"
+	ctl.JsonHashStorageType().SomeBool = true
+	ctl.JsonHashStorageType().SomeInt32 = -125
+	ctl.JsonHashStorageType().SomeUint32 = 255
+	ctl.JsonHashStorageType().SomeInt64 = -255
+	ctl.JsonHashStorageType().SomeUint64 = 255
+	ctl.JsonHashStorageType().SomeFloat = -1.25
+	ctl.JsonHashStorageType().SomeEnum = JsonHashStorageType_E2
+	ctl.JsonHashStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
+	ctl.JsonHashStorageType().JsonHashStorageType = object
+	ctl.JsonHashStorageType().SomeMessages = append(ctl.JsonHashStorageType().SomeMessages, object)
+	ctl.JsonHashStorageType().Timestamps = append(ctl.JsonHashStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	key := "TestHashStorageTypeRedisController_Store"
+	key := "TestJsonHashStorageTypeRedisController_Store"
 
 	if err = ctl.Store(context.Background(), key); err != nil {
 		t.Fatal(err)
@@ -268,10 +268,10 @@ func TestHashStorageTypeRedisController_Store(t *testing.T) {
 	if str := s.HGet(key, "SomeEnum"); str != "1" {
 		t.Error("expect", "1", "got", str)
 	}
-	if str := s.HGet(key, "Timestamp"); bytes.Compare([]byte(str), []byte{8, 3, 16, 4}) != 0 {
+	if str := s.HGet(key, "Timestamp"); bytes.Compare([]byte(str), []byte(`{"seconds":3,"nanos":4}`)) != 0 {
 		t.Error("expect", "[]byte{8, 3, 16, 4}", "got", str)
 	}
-	if str := s.HGet(key, "HashStorageType"); bytes.Compare([]byte(str), []byte{10, 10, 83, 111, 109, 101, 83, 116, 114, 105, 110, 103, 16, 1, 24, 131, 255, 255, 255, 255, 255, 255, 255, 255, 1, 32, 255, 1, 40, 129, 254, 255, 255, 255, 255, 255, 255, 255, 1, 48, 255, 1, 61, 0, 0, 160, 191, 64, 2, 74, 4, 8, 1, 16, 2, 98, 4, 8, 1, 16, 2, 98, 4, 8, 20, 16, 52}) != 0 {
+	if str := s.HGet(key, "JsonHashStorageType"); bytes.Compare([]byte(str), []byte(`{"some_string":"SomeString","some_bool":true,"some_int32":-125,"some_uint32":255,"some_int64":-255,"some_uint64":255,"some_float":-1.25,"some_enum":2,"timestamp":{"seconds":1,"nanos":2},"timestamps":[{"seconds":1,"nanos":2},{"seconds":20,"nanos":52}]}`)) != 0 {
 		t.Error("expect", "[]byte{10,10,83,111,109,101,83...", "got", str)
 	}
 	if str := s.HGet(key, "SomeMessages"); str != `[{"some_string":"SomeString","some_bool":true,"some_int32":-125,"some_uint32":255,"some_int64":-255,"some_uint64":255,"some_float":-1.25,"some_enum":2,"timestamp":{"seconds":1,"nanos":2},"timestamps":[{"seconds":1,"nanos":2},{"seconds":20,"nanos":52}]}]` {
@@ -282,7 +282,7 @@ func TestHashStorageTypeRedisController_Store(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_StoreWithTTL(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_StoreWithTTL(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -300,7 +300,7 @@ func TestHashStorageTypeRedisController_StoreWithTTL(t *testing.T) {
 		},
 	}
 
-	object := &HashStorageType{}
+	object := &JsonHashStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -308,26 +308,26 @@ func TestHashStorageTypeRedisController_StoreWithTTL(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = HashStorageType_E3
+	object.SomeEnum = JsonHashStorageType_E3
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
-	ctl.HashStorageType().SomeString = "SomeString"
-	ctl.HashStorageType().SomeBool = true
-	ctl.HashStorageType().SomeInt32 = -125
-	ctl.HashStorageType().SomeUint32 = 255
-	ctl.HashStorageType().SomeInt64 = -255
-	ctl.HashStorageType().SomeUint64 = 255
-	ctl.HashStorageType().SomeFloat = -1.25
-	ctl.HashStorageType().SomeEnum = HashStorageType_E2
-	ctl.HashStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
-	ctl.HashStorageType().HashStorageType = object
-	ctl.HashStorageType().SomeMessages = append(ctl.HashStorageType().SomeMessages, object)
-	ctl.HashStorageType().Timestamps = append(ctl.HashStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
+	ctl.JsonHashStorageType().SomeString = "SomeString"
+	ctl.JsonHashStorageType().SomeBool = true
+	ctl.JsonHashStorageType().SomeInt32 = -125
+	ctl.JsonHashStorageType().SomeUint32 = 255
+	ctl.JsonHashStorageType().SomeInt64 = -255
+	ctl.JsonHashStorageType().SomeUint64 = 255
+	ctl.JsonHashStorageType().SomeFloat = -1.25
+	ctl.JsonHashStorageType().SomeEnum = JsonHashStorageType_E2
+	ctl.JsonHashStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
+	ctl.JsonHashStorageType().JsonHashStorageType = object
+	ctl.JsonHashStorageType().SomeMessages = append(ctl.JsonHashStorageType().SomeMessages, object)
+	ctl.JsonHashStorageType().Timestamps = append(ctl.JsonHashStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	key := "TestHashStorageTypeRedisController_StoreWithTTL"
+	key := "TestJsonHashStorageTypeRedisController_StoreWithTTL"
 
 	if err = ctl.StoreWithTTL(context.Background(), key, 30); err != nil {
 		t.Error(err)
@@ -357,10 +357,10 @@ func TestHashStorageTypeRedisController_StoreWithTTL(t *testing.T) {
 	if str := s.HGet(key, "SomeEnum"); str != "1" {
 		t.Error("expect", "1", "got", str)
 	}
-	if str := s.HGet(key, "Timestamp"); bytes.Compare([]byte(str), []byte{8, 3, 16, 4}) != 0 {
+	if str := s.HGet(key, "Timestamp"); bytes.Compare([]byte(str), []byte(`{"seconds":3,"nanos":4}`)) != 0 {
 		t.Error("expect", "[]byte{8, 3, 16, 4}", "got", str)
 	}
-	if str := s.HGet(key, "HashStorageType"); bytes.Compare([]byte(str), []byte{10, 10, 83, 111, 109, 101, 83, 116, 114, 105, 110, 103, 16, 1, 24, 131, 255, 255, 255, 255, 255, 255, 255, 255, 1, 32, 255, 1, 40, 129, 254, 255, 255, 255, 255, 255, 255, 255, 1, 48, 255, 1, 61, 0, 0, 160, 191, 64, 2, 74, 4, 8, 1, 16, 2, 98, 4, 8, 1, 16, 2, 98, 4, 8, 20, 16, 52}) != 0 {
+	if str := s.HGet(key, "JsonHashStorageType"); bytes.Compare([]byte(str), []byte(`{"some_string":"SomeString","some_bool":true,"some_int32":-125,"some_uint32":255,"some_int64":-255,"some_uint64":255,"some_float":-1.25,"some_enum":2,"timestamp":{"seconds":1,"nanos":2},"timestamps":[{"seconds":1,"nanos":2},{"seconds":20,"nanos":52}]}`)) != 0 {
 		t.Error("expect", "[]byte{10,10,83,111,109,101,83...", "got", str)
 	}
 	if str := s.HGet(key, "SomeMessages"); str != `[{"some_string":"SomeString","some_bool":true,"some_int32":-125,"some_uint32":255,"some_int64":-255,"some_uint64":255,"some_float":-1.25,"some_enum":2,"timestamp":{"seconds":1,"nanos":2},"timestamps":[{"seconds":1,"nanos":2},{"seconds":20,"nanos":52}]}]` {
@@ -382,7 +382,7 @@ func TestHashStorageTypeRedisController_StoreWithTTL(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_Load(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_Load(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -400,7 +400,7 @@ func TestHashStorageTypeRedisController_Load(t *testing.T) {
 		},
 	}
 
-	object := &HashStorageType{}
+	object := &JsonHashStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -408,43 +408,43 @@ func TestHashStorageTypeRedisController_Load(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = HashStorageType_E3
+	object.SomeEnum = JsonHashStorageType_E3
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
-	ctl.HashStorageType().SomeString = "SomeString"
-	ctl.HashStorageType().SomeBool = true
-	ctl.HashStorageType().SomeInt32 = -125
-	ctl.HashStorageType().SomeUint32 = 255
-	ctl.HashStorageType().SomeInt64 = -255
-	ctl.HashStorageType().SomeUint64 = 255
-	ctl.HashStorageType().SomeFloat = -1.25
-	ctl.HashStorageType().SomeEnum = HashStorageType_E2
-	ctl.HashStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
-	ctl.HashStorageType().HashStorageType = object
-	ctl.HashStorageType().SomeMessages = append(ctl.HashStorageType().SomeMessages, object)
-	ctl.HashStorageType().Timestamps = append(ctl.HashStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
+	ctl.JsonHashStorageType().SomeString = "SomeString"
+	ctl.JsonHashStorageType().SomeBool = true
+	ctl.JsonHashStorageType().SomeInt32 = -125
+	ctl.JsonHashStorageType().SomeUint32 = 255
+	ctl.JsonHashStorageType().SomeInt64 = -255
+	ctl.JsonHashStorageType().SomeUint64 = 255
+	ctl.JsonHashStorageType().SomeFloat = -1.25
+	ctl.JsonHashStorageType().SomeEnum = JsonHashStorageType_E2
+	ctl.JsonHashStorageType().Timestamp = &timestamp.Timestamp{Seconds: 3, Nanos: 4}
+	ctl.JsonHashStorageType().JsonHashStorageType = object
+	ctl.JsonHashStorageType().SomeMessages = append(ctl.JsonHashStorageType().SomeMessages, object)
+	ctl.JsonHashStorageType().Timestamps = append(ctl.JsonHashStorageType().Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	key := "TestHashStorageTypeRedisController_Load"
+	key := "TestJsonHashStorageTypeRedisController_Load"
 
 	if err = ctl.Store(context.Background(), key); err != nil {
 		t.Error(err)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if err = ctl2.Load(context.Background(), key); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().String() != ctl2.HashStorageType().String() {
+	if ctl.JsonHashStorageType().String() != ctl2.JsonHashStorageType().String() {
 		t.Fatalf("load %v should be %v", ctl2, ctl)
 	}
 }
 
-func TestHashStorageTypeRedisController_GetSomeString(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetSomeString(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -462,27 +462,27 @@ func TestHashStorageTypeRedisController_GetSomeString(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetSomeString"
+	key := "TestJsonHashStorageTypeRedisController_GetSomeString"
 	value := "SomeString"
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeString(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().SomeString != value {
+	if ctl.JsonHashStorageType().SomeString != value {
 		t.Error(key, "value should be", value)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetSomeString(key); v != value || err != nil {
 		t.Error(key, "value should be", value)
 	}
 }
 
-func TestHashStorageTypeRedisController_SetSomeString(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetSomeString(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -500,10 +500,10 @@ func TestHashStorageTypeRedisController_SetSomeString(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetSomeString"
+	key := "TestJsonHashStorageTypeRedisController_SetSomeString"
 	value := "SomeString"
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeString(key, value); err != nil {
 		t.Error(err)
@@ -514,7 +514,7 @@ func TestHashStorageTypeRedisController_SetSomeString(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_GetSomeBool(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetSomeBool(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -532,22 +532,22 @@ func TestHashStorageTypeRedisController_GetSomeBool(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetSomeBool"
+	key := "TestJsonHashStorageTypeRedisController_GetSomeBool"
 	var value bool
 
 	value = true
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeBool(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().SomeBool != value {
+	if ctl.JsonHashStorageType().SomeBool != value {
 		t.Error(key, "value should be", value)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetSomeBool(key); v != value || err != nil {
 		t.Error(key, "value should be", value)
@@ -559,7 +559,7 @@ func TestHashStorageTypeRedisController_GetSomeBool(t *testing.T) {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().SomeBool != value {
+	if ctl.JsonHashStorageType().SomeBool != value {
 		t.Error(key, "value should be", value)
 	}
 
@@ -568,7 +568,7 @@ func TestHashStorageTypeRedisController_GetSomeBool(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_SetSomeBool(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetSomeBool(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -586,12 +586,12 @@ func TestHashStorageTypeRedisController_SetSomeBool(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetSomeBool"
+	key := "TestJsonHashStorageTypeRedisController_SetSomeBool"
 	var value bool
 
 	value = true
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeBool(key, value); err != nil {
 		t.Error(err)
@@ -612,7 +612,7 @@ func TestHashStorageTypeRedisController_SetSomeBool(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_GetSomeInt32(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetSomeInt32(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -630,27 +630,27 @@ func TestHashStorageTypeRedisController_GetSomeInt32(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetSomeInt32"
+	key := "TestJsonHashStorageTypeRedisController_GetSomeInt32"
 	value := int32(-125)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeInt32(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().SomeInt32 != value {
+	if ctl.JsonHashStorageType().SomeInt32 != value {
 		t.Error(key, "value should be", value)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetSomeInt32(key); v != value || err != nil {
 		t.Error(key, "value should be", value)
 	}
 }
 
-func TestHashStorageTypeRedisController_SetSomeInt32(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetSomeInt32(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -668,10 +668,10 @@ func TestHashStorageTypeRedisController_SetSomeInt32(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetSomeInt32"
+	key := "TestJsonHashStorageTypeRedisController_SetSomeInt32"
 	value := int32(-125)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeInt32(key, value); err != nil {
 		t.Error(err)
@@ -682,7 +682,7 @@ func TestHashStorageTypeRedisController_SetSomeInt32(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_GetSomeUint32(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetSomeUint32(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -700,27 +700,27 @@ func TestHashStorageTypeRedisController_GetSomeUint32(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetSomeUint32"
+	key := "TestJsonHashStorageTypeRedisController_GetSomeUint32"
 	value := uint32(125)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeUint32(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().SomeUint32 != value {
+	if ctl.JsonHashStorageType().SomeUint32 != value {
 		t.Error(key, "value should be", value)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetSomeUint32(key); v != value || err != nil {
 		t.Error(key, "value should be", value)
 	}
 }
 
-func TestHashStorageTypeRedisController_SetSomeUint32(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetSomeUint32(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -738,10 +738,10 @@ func TestHashStorageTypeRedisController_SetSomeUint32(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetSomeUint32"
+	key := "TestJsonHashStorageTypeRedisController_SetSomeUint32"
 	value := uint32(125)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeUint32(key, value); err != nil {
 		t.Error(err)
@@ -752,7 +752,7 @@ func TestHashStorageTypeRedisController_SetSomeUint32(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_GetSomeInt64(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetSomeInt64(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -770,27 +770,27 @@ func TestHashStorageTypeRedisController_GetSomeInt64(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetSomeInt64"
+	key := "TestJsonHashStorageTypeRedisController_GetSomeInt64"
 	value := int64(-125)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeInt64(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().SomeInt64 != value {
+	if ctl.JsonHashStorageType().SomeInt64 != value {
 		t.Error(key, "value should be", value)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetSomeInt64(key); v != value || err != nil {
 		t.Error(key, "value should be", value)
 	}
 }
 
-func TestHashStorageTypeRedisController_SetSomeInt64(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetSomeInt64(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -808,10 +808,10 @@ func TestHashStorageTypeRedisController_SetSomeInt64(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetSomeInt64"
+	key := "TestJsonHashStorageTypeRedisController_SetSomeInt64"
 	value := int64(-125)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeInt64(key, value); err != nil {
 		t.Error(err)
@@ -822,7 +822,7 @@ func TestHashStorageTypeRedisController_SetSomeInt64(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_GetSomeUint64(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetSomeUint64(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -840,27 +840,27 @@ func TestHashStorageTypeRedisController_GetSomeUint64(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetSomeUint64"
+	key := "TestJsonHashStorageTypeRedisController_GetSomeUint64"
 	value := uint64(125)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeUint64(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().SomeUint64 != value {
+	if ctl.JsonHashStorageType().SomeUint64 != value {
 		t.Error(key, "value should be", value)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetSomeUint64(key); v != value || err != nil {
 		t.Error(key, "value should be", value)
 	}
 }
 
-func TestHashStorageTypeRedisController_SetSomeUint64(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetSomeUint64(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -878,10 +878,10 @@ func TestHashStorageTypeRedisController_SetSomeUint64(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetSomeUint64"
+	key := "TestJsonHashStorageTypeRedisController_SetSomeUint64"
 	value := uint64(125)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeUint64(key, value); err != nil {
 		t.Error(err)
@@ -892,7 +892,7 @@ func TestHashStorageTypeRedisController_SetSomeUint64(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_GetSomeFloat(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetSomeFloat(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -910,27 +910,27 @@ func TestHashStorageTypeRedisController_GetSomeFloat(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetSomeFloat"
+	key := "TestJsonHashStorageTypeRedisController_GetSomeFloat"
 	value := float32(1.25000)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeFloat(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().SomeFloat != value {
+	if ctl.JsonHashStorageType().SomeFloat != value {
 		t.Error(key, "value should be", value)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetSomeFloat(key); v != value || err != nil {
 		t.Error(key, "value should be", value)
 	}
 }
 
-func TestHashStorageTypeRedisController_SetSomeFloat(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetSomeFloat(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -948,10 +948,10 @@ func TestHashStorageTypeRedisController_SetSomeFloat(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetSomeFloat"
+	key := "TestJsonHashStorageTypeRedisController_SetSomeFloat"
 	value := float32(1.25000)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeFloat(key, value); err != nil {
 		t.Error(err)
@@ -962,7 +962,7 @@ func TestHashStorageTypeRedisController_SetSomeFloat(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_GetSomeEnum(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetSomeEnum(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -980,27 +980,27 @@ func TestHashStorageTypeRedisController_GetSomeEnum(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetSomeEnum"
-	value := HashStorageType_E2
+	key := "TestJsonHashStorageTypeRedisController_GetSomeEnum"
+	value := JsonHashStorageType_E2
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeEnum(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().SomeEnum != value {
+	if ctl.JsonHashStorageType().SomeEnum != value {
 		t.Error(key, "value should be", value)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetSomeEnum(key); v != value || err != nil {
 		t.Error(key, "value should be", value)
 	}
 }
 
-func TestHashStorageTypeRedisController_SetSomeEnum(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetSomeEnum(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -1018,10 +1018,10 @@ func TestHashStorageTypeRedisController_SetSomeEnum(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetSomeEnum"
-	value := HashStorageType_E2
+	key := "TestJsonHashStorageTypeRedisController_SetSomeEnum"
+	value := JsonHashStorageType_E2
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeEnum(key, value); err != nil {
 		t.Error(err)
@@ -1032,7 +1032,7 @@ func TestHashStorageTypeRedisController_SetSomeEnum(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_GetTimestamp(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetTimestamp(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -1050,27 +1050,27 @@ func TestHashStorageTypeRedisController_GetTimestamp(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetTimestamp"
+	key := "TestJsonHashStorageTypeRedisController_GetTimestamp"
 	value := &timestamp.Timestamp{Seconds: 1, Nanos: 4}
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetTimestamp(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().Timestamp != value {
+	if ctl.JsonHashStorageType().Timestamp != value {
 		t.Error(key, "value should be", value)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetTimestamp(key); (v.Seconds != 1 || v.Nanos != 4) || err != nil {
 		t.Error(key, "is", v, "value should be", value)
 	}
 }
 
-func TestHashStorageTypeRedisController_SetTimestamp(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetTimestamp(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -1088,22 +1088,22 @@ func TestHashStorageTypeRedisController_SetTimestamp(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetTimestamp"
+	key := "TestJsonHashStorageTypeRedisController_SetTimestamp"
 	value := &timestamp.Timestamp{Seconds: 1, Nanos: 4}
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetTimestamp(key, value); err != nil {
 		t.Error(err)
 	}
 
-	if v := s.HGet(key, "Timestamp"); v != "\b\x01\x10\x04" {
+	if v := s.HGet(key, "Timestamp"); v != `{"seconds":1,"nanos":4}` {
 		t.Error(key, "is", v, "value should be", value)
 
 	}
 }
 
-func TestHashStorageTypeRedisController_GetHashStorageType(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetHashStorageType(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -1121,8 +1121,8 @@ func TestHashStorageTypeRedisController_GetHashStorageType(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetHashStorageType"
-	object := &HashStorageType{}
+	key := "TestJsonHashStorageTypeRedisController_GetHashStorageType"
+	object := &JsonHashStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -1130,28 +1130,28 @@ func TestHashStorageTypeRedisController_GetHashStorageType(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = HashStorageType_E3
+	object.SomeEnum = JsonHashStorageType_E3
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
-	if err := ctl.SetHashStorageTypeField(key, object); err != nil {
+	if err := ctl.SetJsonHashStorageTypeField(key, object); err != nil {
 		t.Error(err)
 	}
 
-	if ctl.HashStorageType().HashStorageType.String() != object.String() {
+	if ctl.JsonHashStorageType().JsonHashStorageType.String() != object.String() {
 		t.Error(key, "value should be", object)
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
-	if v, err := ctl2.GetHashStorageType(key); err != nil || v.String() != object.String() {
+	if v, err := ctl2.GetJsonHashStorageType(key); err != nil || v.String() != object.String() {
 		t.Error(key, "is", v, "value should be", object)
 	}
 }
 
-func TestHashStorageTypeRedisController_SetHashStorageType(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetHashStorageType(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -1169,8 +1169,8 @@ func TestHashStorageTypeRedisController_SetHashStorageType(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetHashStorageType"
-	object := &HashStorageType{}
+	key := "TestJsonHashStorageTypeRedisController_SetHashStorageType"
+	object := &JsonHashStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -1178,22 +1178,22 @@ func TestHashStorageTypeRedisController_SetHashStorageType(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = HashStorageType_E3
+	object.SomeEnum = JsonHashStorageType_E3
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
-	if err := ctl.SetHashStorageTypeField(key, object); err != nil {
+	if err := ctl.SetJsonHashStorageTypeField(key, object); err != nil {
 		t.Error(err)
 	}
 
-	if v := s.HGet(key, "HashStorageType"); v != "\n\nSomeString\x10\x01\x18\x83\xff\xff\xff\xff\xff\xff\xff\xff\x01 \xff\x01(\x81\xfe\xff\xff\xff\xff\xff\xff\xff\x010\xff\x01=\x00\x00\xa0\xbf@\x02J\x04\b\x01\x10\x02b\x04\b\x01\x10\x02b\x04\b\x14\x104" {
+	if v := s.HGet(key, "JsonHashStorageType"); v != `{"some_string":"SomeString","some_bool":true,"some_int32":-125,"some_uint32":255,"some_int64":-255,"some_uint64":255,"some_float":-1.25,"some_enum":2,"timestamp":{"seconds":1,"nanos":2},"timestamps":[{"seconds":1,"nanos":2},{"seconds":20,"nanos":52}]}` {
 		t.Error(key, "is", v, "value should be", )
 	}
 }
 
-func TestHashStorageTypeRedisController_GetSomeMessages(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetSomeMessages(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -1211,8 +1211,8 @@ func TestHashStorageTypeRedisController_GetSomeMessages(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetSomeMessages"
-	object := &HashStorageType{}
+	key := "TestJsonHashStorageTypeRedisController_GetSomeMessages"
+	object := &JsonHashStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -1220,27 +1220,27 @@ func TestHashStorageTypeRedisController_GetSomeMessages(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = HashStorageType_E2
+	object.SomeEnum = JsonHashStorageType_E2
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	var someMessages []*HashStorageType
+	var someMessages []*JsonHashStorageType
 	someMessages = append(someMessages, object)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeMessages(key, someMessages); err != nil {
 		t.Error(err)
 	}
 
 	d1, _ := json.Marshal(&someMessages)
-	d2, _ := json.Marshal(&ctl.HashStorageType().SomeMessages)
+	d2, _ := json.Marshal(&ctl.JsonHashStorageType().SomeMessages)
 
 	if bytes.Compare(d1, d2) != 0 {
 		t.Error(key, "value should be", string(d1))
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetSomeMessages(key); err != nil {
 		t.Error(err)
@@ -1252,7 +1252,7 @@ func TestHashStorageTypeRedisController_GetSomeMessages(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_SetSomeMessages(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetSomeMessages(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -1270,8 +1270,8 @@ func TestHashStorageTypeRedisController_SetSomeMessages(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetSomeMessages"
-	object := &HashStorageType{}
+	key := "TestJsonHashStorageTypeRedisController_SetSomeMessages"
+	object := &JsonHashStorageType{}
 	object.SomeString = "SomeString"
 	object.SomeBool = true
 	object.SomeInt32 = -125
@@ -1279,14 +1279,14 @@ func TestHashStorageTypeRedisController_SetSomeMessages(t *testing.T) {
 	object.SomeInt64 = -255
 	object.SomeUint64 = 255
 	object.SomeFloat = -1.25
-	object.SomeEnum = HashStorageType_E2
+	object.SomeEnum = JsonHashStorageType_E2
 	object.Timestamp = &timestamp.Timestamp{Seconds: 1, Nanos: 2}
 	object.Timestamps = append(object.Timestamps, object.Timestamp, &timestamp.Timestamp{Seconds: 20, Nanos: 52})
 
-	var someMessages []*HashStorageType
+	var someMessages []*JsonHashStorageType
 	someMessages = append(someMessages, object)
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetSomeMessages(key, someMessages); err != nil {
 		t.Error(err)
@@ -1299,7 +1299,7 @@ func TestHashStorageTypeRedisController_SetSomeMessages(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_GetTimestamps(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_GetTimestamps(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -1317,25 +1317,25 @@ func TestHashStorageTypeRedisController_GetTimestamps(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_GetTimestamps"
+	key := "TestJsonHashStorageTypeRedisController_GetTimestamps"
 
 	var timestamps []*timestamp.Timestamp
 	timestamps = append(timestamps, &timestamp.Timestamp{Seconds: 1, Nanos: 4}, &timestamp.Timestamp{Seconds: 2, Nanos: 3})
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetTimestamps(key, timestamps); err != nil {
 		t.Error(err)
 	}
 
 	d1, _ := json.Marshal(timestamps)
-	d2, _ := json.Marshal(ctl.HashStorageType().Timestamps)
+	d2, _ := json.Marshal(ctl.JsonHashStorageType().Timestamps)
 
 	if bytes.Compare(d1, d2) != 0 {
 		t.Error(key, "value should be", string(d1))
 	}
 
-	ctl2 := NewHashStorageTypeRedisController(pool)
+	ctl2 := NewJsonHashStorageTypeRedisController(pool)
 
 	if v, err := ctl2.GetTimestamps(key); err != nil {
 		t.Error(err)
@@ -1347,7 +1347,7 @@ func TestHashStorageTypeRedisController_GetTimestamps(t *testing.T) {
 	}
 }
 
-func TestHashStorageTypeRedisController_SetTimestamps(t *testing.T) {
+func TestJsonHashStorageTypeRedisController_SetTimestamps(t *testing.T) {
 	s, err := miniredis.Run()
 	if err != nil {
 		t.Error(err)
@@ -1365,18 +1365,18 @@ func TestHashStorageTypeRedisController_SetTimestamps(t *testing.T) {
 		},
 	}
 
-	key := "TestHashStorageTypeRedisController_SetTimestamp"
+	key := "TestJsonHashStorageTypeRedisController_SetTimestamp"
 	var timestamps []*timestamp.Timestamp
 	timestamps = append(timestamps, &timestamp.Timestamp{Seconds: 1, Nanos: 4}, &timestamp.Timestamp{Seconds: 2, Nanos: 3})
 
-	ctl := NewHashStorageTypeRedisController(pool)
+	ctl := NewJsonHashStorageTypeRedisController(pool)
 
 	if err := ctl.SetTimestamps(key, timestamps); err != nil {
 		t.Error(err)
 	}
 
 	d1, _ := json.Marshal(timestamps)
-	d2, _ := json.Marshal(ctl.HashStorageType().Timestamps)
+	d2, _ := json.Marshal(ctl.JsonHashStorageType().Timestamps)
 
 	if bytes.Compare(d1, d2) != 0 {
 		t.Error(key, "value should be", string(d1))
