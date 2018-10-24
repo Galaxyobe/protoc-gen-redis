@@ -11,7 +11,9 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
+	"github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	"github.com/galaxyobe/protoc-gen-redis/plugin"
+	"path/filepath"
 )
 
 func main() {
@@ -46,17 +48,27 @@ func main() {
 
 	gen.CommandLineParameters(gen.Request.GetParameter())
 
+	myPlugin := plugin.NewPlugin(useGogoImport)
+
 	gen.WrapTypes()
 	gen.SetPackageNames()
 	gen.BuildTypeNameMap()
-	gen.GeneratePlugin(plugin.NewPlugin(useGogoImport))
+	gen.GeneratePlugin(myPlugin)
+
+	var Response = new(plugin_go.CodeGeneratorResponse)
 
 	for i := 0; i < len(gen.Response.File); i++ {
 		gen.Response.File[i].Name = proto.String(strings.Replace(*gen.Response.File[i].Name, ".pb.go", ".redis.go", -1))
+		name := strings.Split(filepath.Base(*gen.Response.File[i].Name), ".")[0]
+		if g, ok := myPlugin.GenerateMap[name]; ok {
+			if g {
+				Response.File = append(Response.File, gen.Response.File[i])
+			}
+		}
 	}
 
 	// Send back the results.
-	data, err = proto.Marshal(gen.Response)
+	data, err = proto.Marshal(Response)
 	if err != nil {
 		gen.Error(err, "failed to marshal output proto")
 	}

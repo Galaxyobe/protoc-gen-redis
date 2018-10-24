@@ -9,6 +9,7 @@ import (
 	"log"
 	"strings"
 	"github.com/gogo/protobuf/vanity"
+	"path/filepath"
 )
 
 const (
@@ -45,25 +46,29 @@ type generateData struct {
 	Fields          []*generateField
 }
 
-type plugin struct {
+type Plugin struct {
 	*generator.Generator
 	generator.PluginImports
 	useGogoImport bool
+	GenerateMap   map[string]bool
 }
 
-func NewPlugin(useGogoImport bool) generator.Plugin {
-	return &plugin{useGogoImport: useGogoImport}
+func NewPlugin(useGogoImport bool) *Plugin {
+	return &Plugin{
+		useGogoImport: useGogoImport,
+		GenerateMap:   make(map[string]bool),
+	}
 }
 
-func (p *plugin) Name() string {
+func (p *Plugin) Name() string {
 	return "redis"
 }
 
-func (p *plugin) Init(g *generator.Generator) {
+func (p *Plugin) Init(g *generator.Generator) {
 	p.Generator = g
 }
 
-func (p *plugin) Generate(file *generator.FileDescriptor) {
+func (p *Plugin) Generate(file *generator.FileDescriptor) {
 	if len(file.Messages()) == 0 {
 		return
 	}
@@ -82,9 +87,12 @@ func (p *plugin) Generate(file *generator.FileDescriptor) {
 	}
 }
 
-func (p *plugin) generateRedisFunc(file *generator.FileDescriptor, message *generator.Descriptor) {
+func (p *Plugin) generateRedisFunc(file *generator.FileDescriptor, message *generator.Descriptor) {
+	name := strings.Split(filepath.Base(*file.Name), ".")[0]
+	enable := proto.GetBoolExtension(message.Options, redis.E_Enabled, false)
+	p.GenerateMap[name] = enable
 	// enable redis
-	if proto.GetBoolExtension(message.Options, redis.E_Enabled, false) {
+	if enable {
 
 		// generateData
 		data := &generateData{
@@ -147,7 +155,7 @@ func (r *{{.MessageName}}RedisController) Set{{.MessageName}}(m *{{.MessageName}
 `
 
 // generate redis controller common
-func (p *plugin) generateRedisControllerCommon(data *generateData, file *generator.FileDescriptor, message *generator.Descriptor) {
+func (p *Plugin) generateRedisControllerCommon(data *generateData, file *generator.FileDescriptor, message *generator.Descriptor) {
 	tmpl, _ := template.New("RedisController").Parse(redisControllerCommonTemplate)
 	tmpl.Execute(p.Buffer, data)
 }
@@ -211,7 +219,7 @@ func (r *{{.MessageName}}RedisController) StoreWithTTL(ctx {{.ContextPkg}}.Conte
 `
 
 // generate Redis handler by string type
-func (p *plugin) generateRedisStringFunc(data *generateData, file *generator.FileDescriptor, message *generator.Descriptor) {
+func (p *Plugin) generateRedisStringFunc(data *generateData, file *generator.FileDescriptor, message *generator.Descriptor) {
 	tmpl, _ := template.New("StoreToRedis").Parse(storeToRedisStringFuncTemplate)
 	if err := tmpl.Execute(p.Buffer, data); err != nil {
 		log.Println("storeToRedisStringFuncTemplate", data)
@@ -352,7 +360,7 @@ func (r *{{.MessageName}}RedisController) StoreWithTTL(ctx {{.ContextPkg}}.Conte
 `
 
 // generate Redis handler by hash type
-func (p *plugin) generateRedisHashFunc(data *generateData, file *generator.FileDescriptor, message *generator.Descriptor) {
+func (p *Plugin) generateRedisHashFunc(data *generateData, file *generator.FileDescriptor, message *generator.Descriptor) {
 	// range fields
 	for _, field := range message.Field {
 		name := generator.CamelCase(*field.Name)
@@ -503,7 +511,7 @@ func (r *{{.MessageName}}RedisController) Set{{.Name}}{{if eq .Name .NewGoType}}
 `
 
 // generate Redis basic type get handler by hash type
-func (p *plugin) generateRedisHashFieldFunc(data *generateData) {
+func (p *Plugin) generateRedisHashFieldFunc(data *generateData) {
 
 	type FiledType struct {
 		*generateField
