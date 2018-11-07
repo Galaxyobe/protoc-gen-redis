@@ -3,7 +3,6 @@
 
 package test
 
-import context "context"
 import github_com_gomodule_redigo_redis "github.com/gomodule/redigo/redis"
 import github_com_json_iterator_go "github.com/json-iterator/go"
 import github_com_mitchellh_mapstructure "github.com/mitchellh/mapstructure"
@@ -47,8 +46,8 @@ func (r *StringJsonCodecRedisController) SetStringJsonCodec(m *StringJsonCodec) 
 	r.m = m
 }
 
-// store StringJsonCodec to redis string with context and key
-func (r *StringJsonCodecRedisController) Store(ctx context.Context, key string) error {
+// store StringJsonCodec to redis string
+func (r *StringJsonCodecRedisController) Store(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -65,8 +64,8 @@ func (r *StringJsonCodecRedisController) Store(ctx context.Context, key string) 
 	return err
 }
 
-// store StringJsonCodec to redis string with context, key and ttl expire second
-func (r *StringJsonCodecRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
+// store StringJsonCodec to redis string with key and ttl expire second
+func (r *StringJsonCodecRedisController) StoreWithTTL(key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -83,8 +82,8 @@ func (r *StringJsonCodecRedisController) StoreWithTTL(ctx context.Context, key s
 	return err
 }
 
-// load StringJsonCodec from redis string with context and key
-func (r *StringJsonCodecRedisController) Load(ctx context.Context, key string) error {
+// load StringJsonCodec from redis string
+func (r *StringJsonCodecRedisController) Load(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -109,8 +108,9 @@ func (m *HashJsonCodec) RedisController(pool *github_com_gomodule_redigo_redis.P
 
 // HashJsonCodec redis controller
 type HashJsonCodecRedisController struct {
-	pool *github_com_gomodule_redigo_redis.Pool
-	m    *HashJsonCodec
+	pool        *github_com_gomodule_redigo_redis.Pool
+	m           *HashJsonCodec
+	fieldPrefix string
 }
 
 // new HashJsonCodec redis controller with redis pool
@@ -128,8 +128,13 @@ func (r *HashJsonCodecRedisController) SetHashJsonCodec(m *HashJsonCodec) {
 	r.m = m
 }
 
-// load HashJsonCodec from redis hash with context and key
-func (r *HashJsonCodecRedisController) Load(ctx context.Context, key string) error {
+// set HashJsonCodec field prefix
+func (r *HashJsonCodecRedisController) SetFieldPrefix(prefix string) {
+	r.fieldPrefix = prefix + ":"
+}
+
+// load HashJsonCodec from redis hash
+func (r *HashJsonCodecRedisController) Load(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -144,7 +149,7 @@ func (r *HashJsonCodecRedisController) Load(ctx context.Context, key string) err
 	structure := make(map[string]interface{})
 	for i := 0; i < len(data); i += 2 {
 		switch string(data[i]) {
-		case "HashJsonCodec":
+		case r.fieldPrefix + "HashJsonCodec":
 			// unmarshal HashJsonCodec
 			if r.m.HashJsonCodec == nil {
 				r.m.HashJsonCodec = new(HashJsonCodec)
@@ -161,8 +166,58 @@ func (r *HashJsonCodecRedisController) Load(ctx context.Context, key string) err
 	return github_com_mitchellh_mapstructure.WeakDecode(structure, r.m)
 }
 
-// store HashJsonCodec to redis hash with context and key
-func (r *HashJsonCodecRedisController) Store(ctx context.Context, key string) error {
+// get HashJsonCodec field from redis hash return string value
+func (r *HashJsonCodecRedisController) GetString(key string, field string) (value string, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return github_com_gomodule_redigo_redis.String(conn.Do("HGET", key, field))
+}
+
+// get HashJsonCodec field from redis hash return bool value
+func (r *HashJsonCodecRedisController) GetBool(key string, field string) (value bool, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return github_com_gomodule_redigo_redis.Bool(conn.Do("HGET", key, field))
+}
+
+// get HashJsonCodec field from redis hash return int64 value
+func (r *HashJsonCodecRedisController) GetInt64(key string, field string) (value int64, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return github_com_gomodule_redigo_redis.Int64(conn.Do("HGET", key, field))
+}
+
+// get HashJsonCodec field from redis hash return uint64 value
+func (r *HashJsonCodecRedisController) GetUint64(key string, field string) (value uint64, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return github_com_gomodule_redigo_redis.Uint64(conn.Do("HGET", key, field))
+}
+
+// get HashJsonCodec field from redis hash return float64 value
+func (r *HashJsonCodecRedisController) GetFloat64(key string, field string) (value float64, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return github_com_gomodule_redigo_redis.Float64(conn.Do("HGET", key, field))
+}
+
+// store HashJsonCodec to redis hash
+func (r *HashJsonCodecRedisController) Store(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -174,20 +229,20 @@ func (r *HashJsonCodecRedisController) Store(ctx context.Context, key string) er
 	args = append(args, key)
 
 	// add redis field and value
-	args = append(args, "SomeString", r.m.SomeString)
-	args = append(args, "SomeBool", r.m.SomeBool)
-	args = append(args, "SomeInt32", r.m.SomeInt32)
-	args = append(args, "SomeUint32", r.m.SomeUint32)
-	args = append(args, "SomeInt64", r.m.SomeInt64)
-	args = append(args, "SomeUint64", r.m.SomeUint64)
-	args = append(args, "SomeFloat", r.m.SomeFloat)
+	args = append(args, r.fieldPrefix+"SomeString", r.m.SomeString)
+	args = append(args, r.fieldPrefix+"SomeBool", r.m.SomeBool)
+	args = append(args, r.fieldPrefix+"SomeInt32", r.m.SomeInt32)
+	args = append(args, r.fieldPrefix+"SomeUint32", r.m.SomeUint32)
+	args = append(args, r.fieldPrefix+"SomeInt64", r.m.SomeInt64)
+	args = append(args, r.fieldPrefix+"SomeUint64", r.m.SomeUint64)
+	args = append(args, r.fieldPrefix+"SomeFloat", r.m.SomeFloat)
 	// marshal HashJsonCodec
 	if r.m.HashJsonCodec != nil {
 		HashJsonCodec, HashJsonCodecError := github_com_json_iterator_go.Marshal(r.m.HashJsonCodec)
 		if HashJsonCodecError != nil {
 			return HashJsonCodecError
 		}
-		args = append(args, "HashJsonCodec", HashJsonCodec)
+		args = append(args, r.fieldPrefix+"HashJsonCodec", HashJsonCodec)
 	}
 
 	// use redis hash store HashJsonCodec data
@@ -196,8 +251,8 @@ func (r *HashJsonCodecRedisController) Store(ctx context.Context, key string) er
 	return err
 }
 
-// store HashJsonCodec to redis hash with context, key and ttl expire second
-func (r *HashJsonCodecRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
+// store HashJsonCodec to redis hash with key and ttl expire second
+func (r *HashJsonCodecRedisController) StoreWithTTL(key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -209,20 +264,20 @@ func (r *HashJsonCodecRedisController) StoreWithTTL(ctx context.Context, key str
 	args = append(args, key)
 
 	// add redis field and value
-	args = append(args, "SomeString", r.m.SomeString)
-	args = append(args, "SomeBool", r.m.SomeBool)
-	args = append(args, "SomeInt32", r.m.SomeInt32)
-	args = append(args, "SomeUint32", r.m.SomeUint32)
-	args = append(args, "SomeInt64", r.m.SomeInt64)
-	args = append(args, "SomeUint64", r.m.SomeUint64)
-	args = append(args, "SomeFloat", r.m.SomeFloat)
+	args = append(args, r.fieldPrefix+"SomeString", r.m.SomeString)
+	args = append(args, r.fieldPrefix+"SomeBool", r.m.SomeBool)
+	args = append(args, r.fieldPrefix+"SomeInt32", r.m.SomeInt32)
+	args = append(args, r.fieldPrefix+"SomeUint32", r.m.SomeUint32)
+	args = append(args, r.fieldPrefix+"SomeInt64", r.m.SomeInt64)
+	args = append(args, r.fieldPrefix+"SomeUint64", r.m.SomeUint64)
+	args = append(args, r.fieldPrefix+"SomeFloat", r.m.SomeFloat)
 	// marshal HashJsonCodec
 	if r.m.HashJsonCodec != nil {
 		HashJsonCodec, HashJsonCodecError := github_com_json_iterator_go.Marshal(r.m.HashJsonCodec)
 		if HashJsonCodecError != nil {
 			return HashJsonCodecError
 		}
-		args = append(args, "HashJsonCodec", HashJsonCodec)
+		args = append(args, r.fieldPrefix+"HashJsonCodec", HashJsonCodec)
 	}
 
 	// use redis hash store HashJsonCodec data with expire second
@@ -243,6 +298,18 @@ func (r *HashJsonCodecRedisController) StoreWithTTL(ctx context.Context, key str
 	return err
 }
 
+// set HashJsonCodec field value to redis hash
+func (r *HashJsonCodecRedisController) SetValue(key string, field string, value interface{}) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set field
+	_, err = conn.Do("HSET", key, field, value)
+
+	return
+}
+
 // get HashJsonCodec SomeString field value with key
 func (r *HashJsonCodecRedisController) GetSomeString(key string) (someString string, err error) {
 	// redis conn
@@ -250,7 +317,7 @@ func (r *HashJsonCodecRedisController) GetSomeString(key string) (someString str
 	defer conn.Close()
 
 	// get SomeString field
-	if value, err := github_com_gomodule_redigo_redis.String(conn.Do("HGET", key, "SomeString")); err != nil {
+	if value, err := github_com_gomodule_redigo_redis.String(conn.Do("HGET", key, r.fieldPrefix+"SomeString")); err != nil {
 		return someString, err
 	} else {
 		r.m.SomeString = value
@@ -267,7 +334,7 @@ func (r *HashJsonCodecRedisController) SetSomeString(key string, someString stri
 
 	// set SomeString field
 	r.m.SomeString = someString
-	_, err = conn.Do("HSET", key, "SomeString", someString)
+	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeString", someString)
 
 	return
 }
@@ -279,7 +346,7 @@ func (r *HashJsonCodecRedisController) GetSomeBool(key string) (someBool bool, e
 	defer conn.Close()
 
 	// get SomeBool field
-	if value, err := github_com_gomodule_redigo_redis.Bool(conn.Do("HGET", key, "SomeBool")); err != nil {
+	if value, err := github_com_gomodule_redigo_redis.Bool(conn.Do("HGET", key, r.fieldPrefix+"SomeBool")); err != nil {
 		return someBool, err
 	} else {
 		r.m.SomeBool = value
@@ -296,7 +363,7 @@ func (r *HashJsonCodecRedisController) SetSomeBool(key string, someBool bool) (e
 
 	// set SomeBool field
 	r.m.SomeBool = someBool
-	_, err = conn.Do("HSET", key, "SomeBool", someBool)
+	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeBool", someBool)
 
 	return
 }
@@ -308,7 +375,7 @@ func (r *HashJsonCodecRedisController) GetSomeInt32(key string) (someInt32 int32
 	defer conn.Close()
 
 	// get SomeInt32 field
-	if value, err := github_com_gomodule_redigo_redis.Int64(conn.Do("HGET", key, "SomeInt32")); err != nil {
+	if value, err := github_com_gomodule_redigo_redis.Int64(conn.Do("HGET", key, r.fieldPrefix+"SomeInt32")); err != nil {
 		return someInt32, err
 	} else {
 		r.m.SomeInt32 = int32(value)
@@ -325,7 +392,7 @@ func (r *HashJsonCodecRedisController) SetSomeInt32(key string, someInt32 int32)
 
 	// set SomeInt32 field
 	r.m.SomeInt32 = someInt32
-	_, err = conn.Do("HSET", key, "SomeInt32", someInt32)
+	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeInt32", someInt32)
 
 	return
 }
@@ -337,7 +404,7 @@ func (r *HashJsonCodecRedisController) GetSomeUint32(key string) (someUint32 uin
 	defer conn.Close()
 
 	// get SomeUint32 field
-	if value, err := github_com_gomodule_redigo_redis.Uint64(conn.Do("HGET", key, "SomeUint32")); err != nil {
+	if value, err := github_com_gomodule_redigo_redis.Uint64(conn.Do("HGET", key, r.fieldPrefix+"SomeUint32")); err != nil {
 		return someUint32, err
 	} else {
 		r.m.SomeUint32 = uint32(value)
@@ -354,7 +421,7 @@ func (r *HashJsonCodecRedisController) SetSomeUint32(key string, someUint32 uint
 
 	// set SomeUint32 field
 	r.m.SomeUint32 = someUint32
-	_, err = conn.Do("HSET", key, "SomeUint32", someUint32)
+	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeUint32", someUint32)
 
 	return
 }
@@ -366,7 +433,7 @@ func (r *HashJsonCodecRedisController) GetSomeInt64(key string) (someInt64 int64
 	defer conn.Close()
 
 	// get SomeInt64 field
-	if value, err := github_com_gomodule_redigo_redis.Int64(conn.Do("HGET", key, "SomeInt64")); err != nil {
+	if value, err := github_com_gomodule_redigo_redis.Int64(conn.Do("HGET", key, r.fieldPrefix+"SomeInt64")); err != nil {
 		return someInt64, err
 	} else {
 		r.m.SomeInt64 = value
@@ -383,7 +450,7 @@ func (r *HashJsonCodecRedisController) SetSomeInt64(key string, someInt64 int64)
 
 	// set SomeInt64 field
 	r.m.SomeInt64 = someInt64
-	_, err = conn.Do("HSET", key, "SomeInt64", someInt64)
+	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeInt64", someInt64)
 
 	return
 }
@@ -395,7 +462,7 @@ func (r *HashJsonCodecRedisController) GetSomeUint64(key string) (someUint64 uin
 	defer conn.Close()
 
 	// get SomeUint64 field
-	if value, err := github_com_gomodule_redigo_redis.Uint64(conn.Do("HGET", key, "SomeUint64")); err != nil {
+	if value, err := github_com_gomodule_redigo_redis.Uint64(conn.Do("HGET", key, r.fieldPrefix+"SomeUint64")); err != nil {
 		return someUint64, err
 	} else {
 		r.m.SomeUint64 = value
@@ -412,7 +479,7 @@ func (r *HashJsonCodecRedisController) SetSomeUint64(key string, someUint64 uint
 
 	// set SomeUint64 field
 	r.m.SomeUint64 = someUint64
-	_, err = conn.Do("HSET", key, "SomeUint64", someUint64)
+	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeUint64", someUint64)
 
 	return
 }
@@ -424,7 +491,7 @@ func (r *HashJsonCodecRedisController) GetSomeFloat(key string) (someFloat float
 	defer conn.Close()
 
 	// get SomeFloat field
-	if value, err := github_com_gomodule_redigo_redis.Float64(conn.Do("HGET", key, "SomeFloat")); err != nil {
+	if value, err := github_com_gomodule_redigo_redis.Float64(conn.Do("HGET", key, r.fieldPrefix+"SomeFloat")); err != nil {
 		return someFloat, err
 	} else {
 		r.m.SomeFloat = float32(value)
@@ -441,7 +508,7 @@ func (r *HashJsonCodecRedisController) SetSomeFloat(key string, someFloat float3
 
 	// set SomeFloat field
 	r.m.SomeFloat = someFloat
-	_, err = conn.Do("HSET", key, "SomeFloat", someFloat)
+	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeFloat", someFloat)
 
 	return
 }
@@ -453,7 +520,7 @@ func (r *HashJsonCodecRedisController) GetHashJsonCodec(key string) (ret *HashJs
 	defer conn.Close()
 
 	// get HashJsonCodec field
-	if value, err := github_com_gomodule_redigo_redis.Bytes(conn.Do("HGET", key, "HashJsonCodec")); err != nil {
+	if value, err := github_com_gomodule_redigo_redis.Bytes(conn.Do("HGET", key, r.fieldPrefix+"HashJsonCodec")); err != nil {
 		return ret, err
 	} else {
 		// unmarshal HashJsonCodec
@@ -480,7 +547,7 @@ func (r *HashJsonCodecRedisController) SetHashJsonCodecField(key string, HashJso
 		return err
 	} else {
 		// set HashJsonCodec field
-		_, err = conn.Do("HSET", key, "HashJsonCodec", data)
+		_, err = conn.Do("HSET", key, r.fieldPrefix+"HashJsonCodec", data)
 		return err
 	}
 

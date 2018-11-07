@@ -96,7 +96,7 @@ func (p *Plugin) generateRedisFunc(file *generator.FileDescriptor, message *gene
 
 		// generateData
 		data := &generateData{
-			ContextPkg:  p.NewImport(contextPkg).Use(),
+			//ContextPkg:  p.NewImport(contextPkg).Use(),
 			RedisPkg:    p.NewImport(redisPkg).Use(),
 			MessageName: generator.CamelCaseSlice(message.TypeName()),
 		}
@@ -109,9 +109,16 @@ func (p *Plugin) generateRedisFunc(file *generator.FileDescriptor, message *gene
 		}
 
 		storageType, _ := proto.GetExtension(message.Options, redis.E_StorageType)
-		p.generateRedisControllerCommon(data, file, message)
 
 		if storageType != nil && *storageType.(*string) == "hash" {
+			data.StorageType = "hash"
+		} else {
+			data.StorageType = "string"
+		}
+
+		p.generateRedisControllerCommon(data, file, message)
+
+		if data.StorageType == "hash" {
 			data.MapStructurePkg = p.NewImport(mapStructurePkg).Use()
 			// hash handler
 			p.generateRedisHashFunc(data, file, message)
@@ -136,6 +143,9 @@ func (m *{{.MessageName}}) RedisController(pool *{{.RedisPkg}}.Pool) *{{.Message
 type {{.MessageName}}RedisController struct {
 	pool *{{.RedisPkg}}.Pool
 	m    *{{.MessageName}}
+	{{- if eq .StorageType "hash" }}
+	fieldPrefix string
+	{{- end }}
 }
 
 // new {{.MessageName}} redis controller with redis pool
@@ -152,6 +162,13 @@ func (r *{{.MessageName}}RedisController) {{.MessageName}}() *{{.MessageName}} {
 func (r *{{.MessageName}}RedisController) Set{{.MessageName}}(m *{{.MessageName}}) {
 	r.m = m
 }
+
+{{- if eq .StorageType "hash" }}
+// set {{.MessageName}} field prefix
+func (r *{{.MessageName}}RedisController) SetFieldPrefix(prefix string) {
+	r.fieldPrefix = prefix + ":"
+}
+{{- end }}
 `
 
 // generate redis controller common
@@ -162,8 +179,8 @@ func (p *Plugin) generateRedisControllerCommon(data *generateData, file *generat
 
 // load from redis by string type
 const loadFromRedisStringFuncTemplate = `
-// load {{.MessageName}} from redis string with context and key
-func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key string) error {
+// load {{.MessageName}} from redis string
+func (r *{{.MessageName}}RedisController) Load(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -181,8 +198,8 @@ func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key 
 
 // store to redis by string type
 const storeToRedisStringFuncTemplate = `
-// store {{.MessageName}} to redis string with context and key
-func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key string) error {
+// store {{.MessageName}} to redis string
+func (r *{{.MessageName}}RedisController) Store(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -199,8 +216,8 @@ func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key
 	return err
 }
 
-// store {{.MessageName}} to redis string with context, key and ttl expire second
-func (r *{{.MessageName}}RedisController) StoreWithTTL(ctx {{.ContextPkg}}.Context, key string, ttl uint64) error {
+// store {{.MessageName}} to redis string with key and ttl expire second
+func (r *{{.MessageName}}RedisController) StoreWithTTL(key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -232,8 +249,8 @@ func (p *Plugin) generateRedisStringFunc(data *generateData, file *generator.Fil
 
 // load from redis by hash type
 const loadFromRedisHashFuncTemplate = `
-// load {{.MessageName}} from redis hash with context and key
-func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key string) error {
+// load {{.MessageName}} from redis hash
+func (r *{{.MessageName}}RedisController) Load(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -250,7 +267,7 @@ func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key 
 		switch string(data[i]) {
 		{{- range .Fields}}
 			{{- if eq .Type "TYPE_MESSAGE" }}
-			case "{{.Name}}":
+			case r.fieldPrefix+"{{.Name}}":
 				// unmarshal {{.Name}}
 				{{- if not .IsArray }}
 				if r.m.{{.Name}} == nil {
@@ -270,12 +287,62 @@ func (r *{{.MessageName}}RedisController) Load(ctx {{.ContextPkg}}.Context, key 
 	// use mapstructure weak decode structure to {{.MessageName}}
 	return {{.MapStructurePkg}}.WeakDecode(structure, r.m)
 }
+
+// get {{.MessageName}} field from redis hash return string value
+func (r *{{.MessageName}}RedisController) GetString(key string, field string) (value string, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return {{.RedisPkg}}.String(conn.Do("HGET", key, field))
+}
+
+// get {{.MessageName}} field from redis hash return bool value
+func (r *{{.MessageName}}RedisController) GetBool(key string, field string) (value bool, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return {{.RedisPkg}}.Bool(conn.Do("HGET", key, field))
+}
+
+// get {{.MessageName}} field from redis hash return int64 value
+func (r *{{.MessageName}}RedisController) GetInt64(key string, field string) (value int64, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return {{.RedisPkg}}.Int64(conn.Do("HGET", key, field))
+}
+
+// get {{.MessageName}} field from redis hash return uint64 value
+func (r *{{.MessageName}}RedisController) GetUint64(key string, field string) (value uint64, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return {{.RedisPkg}}.Uint64(conn.Do("HGET", key, field))
+}
+
+// get {{.MessageName}} field from redis hash return float64 value
+func (r *{{.MessageName}}RedisController) GetFloat64(key string, field string) (value float64, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return {{.RedisPkg}}.Float64(conn.Do("HGET", key, field))
+}
 `
 
 // store to redis by hash type
 const storeToRedisHashFuncTemplate = `
-// store {{.MessageName}} to redis hash with context and key
-func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key string) error {
+// store {{.MessageName}} to redis hash
+func (r *{{.MessageName}}RedisController) Store(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -295,12 +362,12 @@ func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key
 				if {{.Name}}Error != nil {
 					return {{.Name}}Error
 				}
-				args = append(args, "{{.Name}}", {{.Name}})
+				args = append(args, r.fieldPrefix+"{{.Name}}", {{.Name}})
 			}
 		{{- else if eq .Type "TYPE_ENUM" }}
-		   	args = append(args, "{{.Name}}", int32({{.Value}}))
+		   	args = append(args, r.fieldPrefix+"{{.Name}}", int32({{.Value}}))
 		{{- else }}
-			args = append(args, "{{.Name}}", {{.Value}})
+			args = append(args, r.fieldPrefix+"{{.Name}}", {{.Value}})
 		{{- end }}
 	{{- end}}
 
@@ -310,8 +377,8 @@ func (r *{{.MessageName}}RedisController) Store(ctx {{.ContextPkg}}.Context, key
 	return err
 }
 
-// store {{.MessageName}} to redis hash with context, key and ttl expire second
-func (r *{{.MessageName}}RedisController) StoreWithTTL(ctx {{.ContextPkg}}.Context, key string, ttl uint64) error {
+// store {{.MessageName}} to redis hash with key and ttl expire second
+func (r *{{.MessageName}}RedisController) StoreWithTTL(key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -331,12 +398,12 @@ func (r *{{.MessageName}}RedisController) StoreWithTTL(ctx {{.ContextPkg}}.Conte
 				if {{.Name}}Error != nil {
 					return {{.Name}}Error
 				}
-				args = append(args, "{{.Name}}", {{.Name}})
+				args = append(args, r.fieldPrefix+"{{.Name}}", {{.Name}})
 			}
 		{{- else if eq .Type "TYPE_ENUM" }}
-		   	args = append(args, "{{.Name}}", int32({{.Value}}))
+		   	args = append(args, r.fieldPrefix+"{{.Name}}", int32({{.Value}}))
 		{{- else }}
-			args = append(args, "{{.Name}}", {{.Value}})
+			args = append(args, r.fieldPrefix+"{{.Name}}", {{.Value}})
 		{{- end }}
 	{{- end}}
 
@@ -356,6 +423,18 @@ func (r *{{.MessageName}}RedisController) StoreWithTTL(ctx {{.ContextPkg}}.Conte
 	_, err = conn.Do("EXEC")
 
 	return err
+}
+
+// set {{.MessageName}} field value to redis hash
+func (r *{{.MessageName}}RedisController) SetValue(key string, field string, value interface{}) (err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// set field
+	_, err = conn.Do("HSET", key, field, value)
+
+	return
 }
 `
 
@@ -427,7 +506,7 @@ func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) ({{.JsonName}
 	defer conn.Close()
 
 	// get {{.Name}} field
-	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, "{{.Name}}")); err != nil {
+	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, r.fieldPrefix+"{{.Name}}")); err != nil {
 		return {{.JsonName}}, err
 	} else {
 		{{- if .RedisTypeReplace}}
@@ -452,9 +531,9 @@ func (r *{{.MessageName}}RedisController) Set{{.Name}}(key string, {{.JsonName}}
 	// set {{.Name}} field
 	r.m.{{.Name}} = {{.JsonName}}
 	{{- if eq .Type "TYPE_ENUM" }}
-	_, err = conn.Do("HSET", key, "{{.Name}}", int32({{.JsonName}}))
+	_, err = conn.Do("HSET", key, r.fieldPrefix+"{{.Name}}", int32({{.JsonName}}))
 	{{- else }}
-	_, err = conn.Do("HSET", key, "{{.Name}}", {{.JsonName}})
+	_, err = conn.Do("HSET", key, r.fieldPrefix+"{{.Name}}", {{.JsonName}})
     {{- end}}
 
 	return
@@ -470,7 +549,7 @@ func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) (ret {{.GoTyp
 	defer conn.Close()
 
 	// get {{.Name}} field
-	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, "{{.Name}}")); err != nil {
+	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, r.fieldPrefix+"{{.Name}}")); err != nil {
 		return ret, err
 	} else {
 		// unmarshal {{.Name}}
@@ -502,7 +581,7 @@ func (r *{{.MessageName}}RedisController) Set{{.Name}}{{if eq .Name .NewGoType}}
 		return err
 	} else {
 		// set {{.Name}} field
-		_, err = conn.Do("HSET", key, "{{.Name}}", data)
+		_, err = conn.Do("HSET", key, r.fieldPrefix+"{{.Name}}", data)
 		return err 
 	}
 

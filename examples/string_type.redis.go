@@ -3,7 +3,6 @@
 
 package test
 
-import context "context"
 import github_com_gomodule_redigo_redis "github.com/gomodule/redigo/redis"
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
@@ -45,8 +44,8 @@ func (r *StringStorageTypeRedisController) SetStringStorageType(m *StringStorage
 	r.m = m
 }
 
-// store StringStorageType to redis string with context and key
-func (r *StringStorageTypeRedisController) Store(ctx context.Context, key string) error {
+// store StringStorageType to redis string
+func (r *StringStorageTypeRedisController) Store(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -63,8 +62,8 @@ func (r *StringStorageTypeRedisController) Store(ctx context.Context, key string
 	return err
 }
 
-// store StringStorageType to redis string with context, key and ttl expire second
-func (r *StringStorageTypeRedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
+// store StringStorageType to redis string with key and ttl expire second
+func (r *StringStorageTypeRedisController) StoreWithTTL(key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -81,8 +80,8 @@ func (r *StringStorageTypeRedisController) StoreWithTTL(ctx context.Context, key
 	return err
 }
 
-// load StringStorageType from redis string with context and key
-func (r *StringStorageTypeRedisController) Load(ctx context.Context, key string) error {
+// load StringStorageType from redis string
+func (r *StringStorageTypeRedisController) Load(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -126,8 +125,8 @@ func (r *StringStorageType2RedisController) SetStringStorageType2(m *StringStora
 	r.m = m
 }
 
-// store StringStorageType2 to redis string with context and key
-func (r *StringStorageType2RedisController) Store(ctx context.Context, key string) error {
+// store StringStorageType2 to redis string
+func (r *StringStorageType2RedisController) Store(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -144,8 +143,8 @@ func (r *StringStorageType2RedisController) Store(ctx context.Context, key strin
 	return err
 }
 
-// store StringStorageType2 to redis string with context, key and ttl expire second
-func (r *StringStorageType2RedisController) StoreWithTTL(ctx context.Context, key string, ttl uint64) error {
+// store StringStorageType2 to redis string with key and ttl expire second
+func (r *StringStorageType2RedisController) StoreWithTTL(key string, ttl uint64) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -162,8 +161,8 @@ func (r *StringStorageType2RedisController) StoreWithTTL(ctx context.Context, ke
 	return err
 }
 
-// load StringStorageType2 from redis string with context and key
-func (r *StringStorageType2RedisController) Load(ctx context.Context, key string) error {
+// load StringStorageType2 from redis string
+func (r *StringStorageType2RedisController) Load(key string) error {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
