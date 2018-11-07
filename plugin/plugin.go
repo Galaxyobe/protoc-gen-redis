@@ -90,7 +90,9 @@ func (p *Plugin) Generate(file *generator.FileDescriptor) {
 func (p *Plugin) generateRedisFunc(file *generator.FileDescriptor, message *generator.Descriptor) {
 	name := strings.Split(filepath.Base(*file.Name), ".")[0]
 	enable := proto.GetBoolExtension(message.Options, redis.E_Enabled, false)
-	p.GenerateMap[name] = enable
+	if _, ok := p.GenerateMap[name]; !ok {
+		p.GenerateMap[name] = enable
+	}
 	// enable redis
 	if enable {
 
