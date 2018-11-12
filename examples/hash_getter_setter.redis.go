@@ -26,9 +26,8 @@ func (m *HashGetterAndSetterType) RedisController(pool *github_com_gomodule_redi
 
 // HashGetterAndSetterType redis controller
 type HashGetterAndSetterTypeRedisController struct {
-	pool        *github_com_gomodule_redigo_redis.Pool
-	m           *HashGetterAndSetterType
-	fieldPrefix string
+	pool *github_com_gomodule_redigo_redis.Pool
+	m    *HashGetterAndSetterType
 }
 
 // new HashGetterAndSetterType redis controller with redis pool
@@ -44,11 +43,6 @@ func (r *HashGetterAndSetterTypeRedisController) HashGetterAndSetterType() *Hash
 // set HashGetterAndSetterType
 func (r *HashGetterAndSetterTypeRedisController) SetHashGetterAndSetterType(m *HashGetterAndSetterType) {
 	r.m = m
-}
-
-// set HashGetterAndSetterType field prefix
-func (r *HashGetterAndSetterTypeRedisController) SetFieldPrefix(prefix string) {
-	r.fieldPrefix = prefix + ":"
 }
 
 // load HashGetterAndSetterType from redis hash
@@ -139,14 +133,14 @@ func (r *HashGetterAndSetterTypeRedisController) Store(key string) error {
 	args = append(args, key)
 
 	// add redis field and value
-	args = append(args, r.fieldPrefix+"SomeString", r.m.SomeString)
-	args = append(args, r.fieldPrefix+"SomeBool", r.m.SomeBool)
-	args = append(args, r.fieldPrefix+"SomeInt32", r.m.SomeInt32)
-	args = append(args, r.fieldPrefix+"SomeUint32", r.m.SomeUint32)
-	args = append(args, r.fieldPrefix+"SomeInt64", r.m.SomeInt64)
-	args = append(args, r.fieldPrefix+"SomeUint64", r.m.SomeUint64)
-	args = append(args, r.fieldPrefix+"SomeFloat", r.m.SomeFloat)
-	args = append(args, r.fieldPrefix+"SomeEnum", int32(r.m.SomeEnum))
+	args = append(args, "SomeString", r.m.SomeString)
+	args = append(args, "SomeBool", r.m.SomeBool)
+	args = append(args, "SomeInt32", r.m.SomeInt32)
+	args = append(args, "SomeUint32", r.m.SomeUint32)
+	args = append(args, "SomeInt64", r.m.SomeInt64)
+	args = append(args, "SomeUint64", r.m.SomeUint64)
+	args = append(args, "SomeFloat", r.m.SomeFloat)
+	args = append(args, "SomeEnum", int32(r.m.SomeEnum))
 
 	// use redis hash store HashGetterAndSetterType data
 	_, err := conn.Do("HMSET", args...)
@@ -167,14 +161,14 @@ func (r *HashGetterAndSetterTypeRedisController) StoreWithTTL(key string, ttl ui
 	args = append(args, key)
 
 	// add redis field and value
-	args = append(args, r.fieldPrefix+"SomeString", r.m.SomeString)
-	args = append(args, r.fieldPrefix+"SomeBool", r.m.SomeBool)
-	args = append(args, r.fieldPrefix+"SomeInt32", r.m.SomeInt32)
-	args = append(args, r.fieldPrefix+"SomeUint32", r.m.SomeUint32)
-	args = append(args, r.fieldPrefix+"SomeInt64", r.m.SomeInt64)
-	args = append(args, r.fieldPrefix+"SomeUint64", r.m.SomeUint64)
-	args = append(args, r.fieldPrefix+"SomeFloat", r.m.SomeFloat)
-	args = append(args, r.fieldPrefix+"SomeEnum", int32(r.m.SomeEnum))
+	args = append(args, "SomeString", r.m.SomeString)
+	args = append(args, "SomeBool", r.m.SomeBool)
+	args = append(args, "SomeInt32", r.m.SomeInt32)
+	args = append(args, "SomeUint32", r.m.SomeUint32)
+	args = append(args, "SomeInt64", r.m.SomeInt64)
+	args = append(args, "SomeUint64", r.m.SomeUint64)
+	args = append(args, "SomeFloat", r.m.SomeFloat)
+	args = append(args, "SomeEnum", int32(r.m.SomeEnum))
 
 	// use redis hash store HashGetterAndSetterType data with expire second
 	err := conn.Send("MULTI")
@@ -195,7 +189,7 @@ func (r *HashGetterAndSetterTypeRedisController) StoreWithTTL(key string, ttl ui
 }
 
 // set HashGetterAndSetterType field value to redis hash
-func (r *HashGetterAndSetterTypeRedisController) SetValue(key string, field string, value interface{}) (err error) {
+func (r *HashGetterAndSetterTypeRedisController) SetFieldValue(key string, field string, value interface{}) (err error) {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -214,7 +208,7 @@ func (r *HashGetterAndSetterTypeRedisController) SetSomeString(key string, someS
 
 	// set SomeString field
 	r.m.SomeString = someString
-	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeString", someString)
+	_, err = conn.Do("HSET", key, "SomeString", someString)
 
 	return
 }
@@ -227,7 +221,7 @@ func (r *HashGetterAndSetterTypeRedisController) SetSomeBool(key string, someBoo
 
 	// set SomeBool field
 	r.m.SomeBool = someBool
-	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeBool", someBool)
+	_, err = conn.Do("HSET", key, "SomeBool", someBool)
 
 	return
 }
@@ -240,7 +234,7 @@ func (r *HashGetterAndSetterTypeRedisController) SetSomeInt32(key string, someIn
 
 	// set SomeInt32 field
 	r.m.SomeInt32 = someInt32
-	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeInt32", someInt32)
+	_, err = conn.Do("HSET", key, "SomeInt32", someInt32)
 
 	return
 }
@@ -253,7 +247,7 @@ func (r *HashGetterAndSetterTypeRedisController) SetSomeUint32(key string, someU
 
 	// set SomeUint32 field
 	r.m.SomeUint32 = someUint32
-	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeUint32", someUint32)
+	_, err = conn.Do("HSET", key, "SomeUint32", someUint32)
 
 	return
 }
@@ -266,7 +260,7 @@ func (r *HashGetterAndSetterTypeRedisController) SetSomeInt64(key string, someIn
 
 	// set SomeInt64 field
 	r.m.SomeInt64 = someInt64
-	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeInt64", someInt64)
+	_, err = conn.Do("HSET", key, "SomeInt64", someInt64)
 
 	return
 }
@@ -279,7 +273,7 @@ func (r *HashGetterAndSetterTypeRedisController) SetSomeUint64(key string, someU
 
 	// set SomeUint64 field
 	r.m.SomeUint64 = someUint64
-	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeUint64", someUint64)
+	_, err = conn.Do("HSET", key, "SomeUint64", someUint64)
 
 	return
 }
@@ -292,7 +286,7 @@ func (r *HashGetterAndSetterTypeRedisController) SetSomeFloat(key string, someFl
 
 	// set SomeFloat field
 	r.m.SomeFloat = someFloat
-	_, err = conn.Do("HSET", key, r.fieldPrefix+"SomeFloat", someFloat)
+	_, err = conn.Do("HSET", key, "SomeFloat", someFloat)
 
 	return
 }
@@ -304,7 +298,7 @@ func (r *HashGetterAndSetterTypeRedisController) GetSomeEnum(key string) (someEn
 	defer conn.Close()
 
 	// get SomeEnum field
-	if value, err := github_com_gomodule_redigo_redis.Int64(conn.Do("HGET", key, r.fieldPrefix+"SomeEnum")); err != nil {
+	if value, err := github_com_gomodule_redigo_redis.Int64(conn.Do("HGET", key, "SomeEnum")); err != nil {
 		return someEnum, err
 	} else {
 		r.m.SomeEnum = HashGetterAndSetterType_Enum(value)

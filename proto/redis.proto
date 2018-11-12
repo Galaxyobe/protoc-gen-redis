@@ -19,6 +19,10 @@ extend google.protobuf.MessageOptions {
     bool hash_getter = 65004;
     // all hash field setter function, default is true
     bool hash_setter = 65005;
+    // enabled field prefix
+    bool field_prefix = 65006;
+    // function type: hash_field | hash_list, default is hash_field
+    string function_type = 65007;
 }
 
 extend google.protobuf.FieldOptions {

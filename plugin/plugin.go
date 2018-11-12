@@ -44,6 +44,8 @@ type generateData struct {
 	CodecPkg        string
 	StorageType     string
 	Fields          []*generateField
+	FieldPrefix     bool
+	FunctionType    string
 }
 
 type Plugin struct {
@@ -111,11 +113,18 @@ func (p *Plugin) generateRedisFunc(file *generator.FileDescriptor, message *gene
 		}
 
 		storageType, _ := proto.GetExtension(message.Options, redis.E_StorageType)
+		fieldPrefix := proto.GetBoolExtension(message.Options, redis.E_FieldPrefix, false)
+		functionType, _ := proto.GetExtension(message.Options, redis.E_FunctionType)
 
 		if storageType != nil && *storageType.(*string) == "hash" {
 			data.StorageType = "hash"
+			data.FieldPrefix = fieldPrefix
+			if functionType == nil {
+				data.FunctionType = "hash_field"
+			}
 		} else {
 			data.StorageType = "string"
+			data.FieldPrefix = false
 		}
 
 		p.generateRedisControllerCommon(data, file, message)
@@ -145,7 +154,7 @@ func (m *{{.MessageName}}) RedisController(pool *{{.RedisPkg}}.Pool) *{{.Message
 type {{.MessageName}}RedisController struct {
 	pool *{{.RedisPkg}}.Pool
 	m    *{{.MessageName}}
-	{{- if eq .StorageType "hash" }}
+	{{- if $.FieldPrefix }}
 	fieldPrefix string
 	{{- end }}
 }
@@ -165,7 +174,7 @@ func (r *{{.MessageName}}RedisController) Set{{.MessageName}}(m *{{.MessageName}
 	r.m = m
 }
 
-{{- if eq .StorageType "hash" }}
+{{if .FieldPrefix}}
 // set {{.MessageName}} field prefix
 func (r *{{.MessageName}}RedisController) SetFieldPrefix(prefix string) {
 	r.fieldPrefix = prefix + ":"
@@ -269,7 +278,7 @@ func (r *{{.MessageName}}RedisController) Load(key string) error {
 		switch string(data[i]) {
 		{{- range .Fields}}
 			{{- if eq .Type "TYPE_MESSAGE" }}
-			case r.fieldPrefix+"{{.Name}}":
+			case {{if $.FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}":
 				// unmarshal {{.Name}}
 				{{- if not .IsArray }}
 				if r.m.{{.Name}} == nil {
@@ -339,6 +348,16 @@ func (r *{{.MessageName}}RedisController) GetFloat64(key string, field string) (
 	// get field
 	return {{.RedisPkg}}.Float64(conn.Do("HGET", key, field))
 }
+
+// get {{.MessageName}} field from redis hash return interface
+func (r *{{.MessageName}}RedisController) GetInterface(key string, field string) (value interface{}, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return conn.Do("HGET", key, field)
+}
 `
 
 // store to redis by hash type
@@ -364,12 +383,12 @@ func (r *{{.MessageName}}RedisController) Store(key string) error {
 				if {{.Name}}Error != nil {
 					return {{.Name}}Error
 				}
-				args = append(args, r.fieldPrefix+"{{.Name}}", {{.Name}})
+				args = append(args, {{if $.FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}", {{.Name}})
 			}
 		{{- else if eq .Type "TYPE_ENUM" }}
-		   	args = append(args, r.fieldPrefix+"{{.Name}}", int32({{.Value}}))
+		   	args = append(args, {{if $.FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}", int32({{.Value}}))
 		{{- else }}
-			args = append(args, r.fieldPrefix+"{{.Name}}", {{.Value}})
+			args = append(args, {{if $.FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}", {{.Value}})
 		{{- end }}
 	{{- end}}
 
@@ -400,12 +419,12 @@ func (r *{{.MessageName}}RedisController) StoreWithTTL(key string, ttl uint64) e
 				if {{.Name}}Error != nil {
 					return {{.Name}}Error
 				}
-				args = append(args, r.fieldPrefix+"{{.Name}}", {{.Name}})
+				args = append(args, {{if $.FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}", {{.Name}})
 			}
 		{{- else if eq .Type "TYPE_ENUM" }}
-		   	args = append(args, r.fieldPrefix+"{{.Name}}", int32({{.Value}}))
+		   	args = append(args, {{if $.FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}", int32({{.Value}}))
 		{{- else }}
-			args = append(args, r.fieldPrefix+"{{.Name}}", {{.Value}})
+			args = append(args, {{if $.FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}", {{.Value}})
 		{{- end }}
 	{{- end}}
 
@@ -428,7 +447,7 @@ func (r *{{.MessageName}}RedisController) StoreWithTTL(key string, ttl uint64) e
 }
 
 // set {{.MessageName}} field value to redis hash
-func (r *{{.MessageName}}RedisController) SetValue(key string, field string, value interface{}) (err error) {
+func (r *{{.MessageName}}RedisController) SetFieldValue(key string, field string, value interface{}) (err error) {
 	// redis conn
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -496,7 +515,9 @@ func (p *Plugin) generateRedisHashFunc(data *generateData, file *generator.FileD
 		log.Println("storeToRedisHashFuncTemplate", data)
 	}
 	// hash field getter and setter function
-	p.generateRedisHashFieldFunc(data)
+	if data.FunctionType == "hash_field" {
+		p.generateRedisHashFieldFunc(data)
+	}
 }
 
 // get basic type from redis by hash field
@@ -508,7 +529,7 @@ func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) ({{.JsonName}
 	defer conn.Close()
 
 	// get {{.Name}} field
-	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, r.fieldPrefix+"{{.Name}}")); err != nil {
+	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, {{if .FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}")); err != nil {
 		return {{.JsonName}}, err
 	} else {
 		{{- if .RedisTypeReplace}}
@@ -533,9 +554,9 @@ func (r *{{.MessageName}}RedisController) Set{{.Name}}(key string, {{.JsonName}}
 	// set {{.Name}} field
 	r.m.{{.Name}} = {{.JsonName}}
 	{{- if eq .Type "TYPE_ENUM" }}
-	_, err = conn.Do("HSET", key, r.fieldPrefix+"{{.Name}}", int32({{.JsonName}}))
+	_, err = conn.Do("HSET", key, {{if .FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}", int32({{.JsonName}}))
 	{{- else }}
-	_, err = conn.Do("HSET", key, r.fieldPrefix+"{{.Name}}", {{.JsonName}})
+	_, err = conn.Do("HSET", key, {{if .FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}", {{.JsonName}})
     {{- end}}
 
 	return
@@ -551,7 +572,7 @@ func (r *{{.MessageName}}RedisController) Get{{.Name}}(key string) (ret {{.GoTyp
 	defer conn.Close()
 
 	// get {{.Name}} field
-	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, r.fieldPrefix+"{{.Name}}")); err != nil {
+	if value, err := {{.RedisPkg}}.{{.RedisType}}(conn.Do("HGET", key, {{if $.FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}")); err != nil {
 		return ret, err
 	} else {
 		// unmarshal {{.Name}}
@@ -583,7 +604,7 @@ func (r *{{.MessageName}}RedisController) Set{{.Name}}{{if eq .Name .NewGoType}}
 		return err
 	} else {
 		// set {{.Name}} field
-		_, err = conn.Do("HSET", key, r.fieldPrefix+"{{.Name}}", data)
+		_, err = conn.Do("HSET", key, {{if $.FieldPrefix}} r.fieldPrefix+ {{end}}"{{.Name}}", data)
 		return err 
 	}
 
@@ -596,18 +617,13 @@ func (p *Plugin) generateRedisHashFieldFunc(data *generateData) {
 
 	type FiledType struct {
 		*generateField
-		MessageName string
-		RedisPkg    string
-		CodecPkg    string
+		*generateData
 	}
 
 	for _, field := range data.Fields {
 
-		fieldData := FiledType{
-			MessageName: data.MessageName,
-			RedisPkg:    data.RedisPkg,
-			CodecPkg:    data.CodecPkg,
-		}
+		fieldData := &FiledType{}
+		fieldData.generateData = data
 		fieldData.generateField = field
 
 		getTemplateName := ""
