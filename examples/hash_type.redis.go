@@ -3,15 +3,17 @@
 
 package test
 
-import github_com_gomodule_redigo_redis "github.com/gomodule/redigo/redis"
-import github_com_mitchellh_mapstructure "github.com/mitchellh/mapstructure"
-import github_com_json_iterator_go "github.com/json-iterator/go"
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/galaxyobe/protoc-gen-redis/proto"
-import _ "github.com/gogo/protobuf/gogoproto"
-import timestamp "github.com/golang/protobuf/ptypes/timestamp"
+import (
+	fmt "fmt"
+	math "math"
+	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/galaxyobe/protoc-gen-redis/proto"
+	_ "github.com/gogo/protobuf/gogoproto"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
+	github_com_gomodule_redigo_redis "github.com/gomodule/redigo/redis"
+	github_com_mitchellh_mapstructure "github.com/mitchellh/mapstructure"
+	github_com_json_iterator_go "github.com/json-iterator/go"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -120,6 +122,16 @@ func (r *HashStorageTypeRedisController) GetFloat64(key string, field string) (v
 
 	// get field
 	return github_com_gomodule_redigo_redis.Float64(conn.Do("HGET", key, field))
+}
+
+// get HashStorageType field from redis hash return interface
+func (r *HashStorageTypeRedisController) GetInterface(key string, field string) (value interface{}, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return conn.Do("HGET", key, field)
 }
 
 // store HashStorageType to redis hash
@@ -557,6 +569,16 @@ func (r *HashStorageType2RedisController) GetFloat64(key string, field string) (
 
 	// get field
 	return github_com_gomodule_redigo_redis.Float64(conn.Do("HGET", key, field))
+}
+
+// get HashStorageType2 field from redis hash return interface
+func (r *HashStorageType2RedisController) GetInterface(key string, field string) (value interface{}, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return conn.Do("HGET", key, field)
 }
 
 // store HashStorageType2 to redis hash

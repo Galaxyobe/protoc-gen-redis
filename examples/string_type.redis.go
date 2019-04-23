@@ -3,12 +3,15 @@
 
 package test
 
-import github_com_gomodule_redigo_redis "github.com/gomodule/redigo/redis"
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/galaxyobe/protoc-gen-redis/proto"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	fmt "fmt"
+	math "math"
+	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/gogo/protobuf/gogoproto"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
+	_ "github.com/galaxyobe/protoc-gen-redis/proto"
+	github_com_gomodule_redigo_redis "github.com/gomodule/redigo/redis"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal

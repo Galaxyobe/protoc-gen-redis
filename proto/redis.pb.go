@@ -3,10 +3,12 @@
 
 package redis
 
-import proto "github.com/gogo/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+import (
+	fmt "fmt"
+	proto "github.com/gogo/protobuf/proto"
+	descriptor "github.com/gogo/protobuf/protoc-gen-gogo/descriptor"
+	math "math"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -33,7 +35,7 @@ var E_StorageType = &proto.ExtensionDesc{
 	ExtensionType: (*string)(nil),
 	Field:         65002,
 	Name:          "redis.storage_type",
-	Tag:           "bytes,65002,opt,name=storage_type,json=storageType",
+	Tag:           "bytes,65002,opt,name=storage_type",
 	Filename:      "redis.proto",
 }
 
@@ -42,7 +44,7 @@ var E_StorageCodec = &proto.ExtensionDesc{
 	ExtensionType: (*string)(nil),
 	Field:         65003,
 	Name:          "redis.storage_codec",
-	Tag:           "bytes,65003,opt,name=storage_codec,json=storageCodec",
+	Tag:           "bytes,65003,opt,name=storage_codec",
 	Filename:      "redis.proto",
 }
 
@@ -51,7 +53,7 @@ var E_HashGetter = &proto.ExtensionDesc{
 	ExtensionType: (*bool)(nil),
 	Field:         65004,
 	Name:          "redis.hash_getter",
-	Tag:           "varint,65004,opt,name=hash_getter,json=hashGetter",
+	Tag:           "varint,65004,opt,name=hash_getter",
 	Filename:      "redis.proto",
 }
 
@@ -60,7 +62,7 @@ var E_HashSetter = &proto.ExtensionDesc{
 	ExtensionType: (*bool)(nil),
 	Field:         65005,
 	Name:          "redis.hash_setter",
-	Tag:           "varint,65005,opt,name=hash_setter,json=hashSetter",
+	Tag:           "varint,65005,opt,name=hash_setter",
 	Filename:      "redis.proto",
 }
 
@@ -69,7 +71,7 @@ var E_FieldPrefix = &proto.ExtensionDesc{
 	ExtensionType: (*bool)(nil),
 	Field:         65006,
 	Name:          "redis.field_prefix",
-	Tag:           "varint,65006,opt,name=field_prefix,json=fieldPrefix",
+	Tag:           "varint,65006,opt,name=field_prefix",
 	Filename:      "redis.proto",
 }
 
@@ -78,7 +80,7 @@ var E_FunctionType = &proto.ExtensionDesc{
 	ExtensionType: (*string)(nil),
 	Field:         65007,
 	Name:          "redis.function_type",
-	Tag:           "bytes,65007,opt,name=function_type,json=functionType",
+	Tag:           "bytes,65007,opt,name=function_type",
 	Filename:      "redis.proto",
 }
 
@@ -87,7 +89,7 @@ var E_StorageFieldType = &proto.ExtensionDesc{
 	ExtensionType: (*string)(nil),
 	Field:         65100,
 	Name:          "redis.storage_field_type",
-	Tag:           "bytes,65100,opt,name=storage_field_type,json=storageFieldType",
+	Tag:           "bytes,65100,opt,name=storage_field_type",
 	Filename:      "redis.proto",
 }
 
@@ -96,7 +98,7 @@ var E_StorageFieldCodec = &proto.ExtensionDesc{
 	ExtensionType: (*string)(nil),
 	Field:         65101,
 	Name:          "redis.storage_field_codec",
-	Tag:           "bytes,65101,opt,name=storage_field_codec,json=storageFieldCodec",
+	Tag:           "bytes,65101,opt,name=storage_field_codec",
 	Filename:      "redis.proto",
 }
 
@@ -105,7 +107,7 @@ var E_HashFieldGetter = &proto.ExtensionDesc{
 	ExtensionType: (*bool)(nil),
 	Field:         65102,
 	Name:          "redis.hash_field_getter",
-	Tag:           "varint,65102,opt,name=hash_field_getter,json=hashFieldGetter",
+	Tag:           "varint,65102,opt,name=hash_field_getter",
 	Filename:      "redis.proto",
 }
 
@@ -114,7 +116,7 @@ var E_HashFieldSetter = &proto.ExtensionDesc{
 	ExtensionType: (*bool)(nil),
 	Field:         65103,
 	Name:          "redis.hash_field_setter",
-	Tag:           "varint,65103,opt,name=hash_field_setter,json=hashFieldSetter",
+	Tag:           "varint,65103,opt,name=hash_field_setter",
 	Filename:      "redis.proto",
 }
 
@@ -132,9 +134,9 @@ func init() {
 	proto.RegisterExtension(E_HashFieldSetter)
 }
 
-func init() { proto.RegisterFile("redis.proto", fileDescriptor_redis_7759a816ce10b15d) }
+func init() { proto.RegisterFile("redis.proto", fileDescriptor_d954120a2319ff8f) }
 
-var fileDescriptor_redis_7759a816ce10b15d = []byte{
+var fileDescriptor_d954120a2319ff8f = []byte{
 	// 346 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0xd3, 0xcb, 0x4e, 0x32, 0x31,
 	0x14, 0x07, 0xf0, 0x7c, 0xf9, 0x82, 0x97, 0x0e, 0x46, 0x81, 0x8d, 0x31, 0x31, 0x92, 0xb8, 0x71,

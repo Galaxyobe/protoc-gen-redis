@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/galaxyobe/protoc-gen-redis/plugin"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/protoc-gen-gogo/generator"
 	"github.com/gogo/protobuf/protoc-gen-gogo/plugin"
-	"github.com/galaxyobe/protoc-gen-redis/plugin"
 	"path/filepath"
 )
 

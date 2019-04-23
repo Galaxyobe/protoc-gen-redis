@@ -3,13 +3,16 @@
 
 package test
 
-import github_com_gomodule_redigo_redis "github.com/gomodule/redigo/redis"
-import github_com_mitchellh_mapstructure "github.com/mitchellh/mapstructure"
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
-import _ "github.com/galaxyobe/protoc-gen-redis/proto"
-import _ "github.com/gogo/protobuf/gogoproto"
+import (
+	fmt "fmt"
+	math "math"
+	proto "github.com/gogo/protobuf/proto"
+	_ "github.com/gogo/protobuf/gogoproto"
+	timestamp "github.com/golang/protobuf/ptypes/timestamp"
+	_ "github.com/galaxyobe/protoc-gen-redis/proto"
+	github_com_gomodule_redigo_redis "github.com/gomodule/redigo/redis"
+	github_com_mitchellh_mapstructure "github.com/mitchellh/mapstructure"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -207,6 +210,16 @@ func (r *HashProtoCodecRedisController) GetFloat64(key string, field string) (va
 
 	// get field
 	return github_com_gomodule_redigo_redis.Float64(conn.Do("HGET", key, field))
+}
+
+// get HashProtoCodec field from redis hash return interface
+func (r *HashProtoCodecRedisController) GetInterface(key string, field string) (value interface{}, err error) {
+	// redis conn
+	conn := r.pool.Get()
+	defer conn.Close()
+
+	// get field
+	return conn.Do("HGET", key, field)
 }
 
 // store HashProtoCodec to redis hash
